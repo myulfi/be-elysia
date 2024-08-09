@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  username     String     @id @map("username") @db.VarChar(20)
+  password     String?    @map("pass") @db.VarChar(32)
+  nickName     String?    @map("nick_nm") @db.VarChar(20)
+  fullName     String?    @map("full_nm") @db.VarChar(50)
+  email        String?    @map("email") @db.VarChar(30)
+  phone        String?    @map("phone") @db.VarChar(20)
+  supervisor   String?    @map("supervisor") @db.VarChar(20)
+  activeDate   DateTime?  @map("dt_active") @db.Timestamp(6)
+  loginDate    DateTime?  @map("dt_login") @db.Timestamp(6)
+  logoutDate   DateTime?  @map("dt_logout") @db.Timestamp(6)
+  ip           String?    @map("ip") @db.VarChar(20)
+  lastAccess   String?    @map("last_access") @db.VarChar(2000)
+  agent        String?    @map("agent") @db.VarChar(300)
+  resignDate   DateTime?  @map("dt_resign") @db.Date
+  createdBy    String?    @map("created_by") @db.VarChar(20)
+  createdDate  DateTime?  @map("dt_created") @db.Timestamp(6)
+  updatedBy    String?    @map("updated_by") @db.VarChar(20)
+  updatedDate  DateTime?  @map("dt_updated") @db.Timestamp(6)
+  version      Int?       @default(0) @map("version") @db.SmallInt
+  userRoleList UserRole[]
+
+  @@map("tbl_user")
+}
+
+model MasterRole {
+  id           Int              @id @map("id") @db.SmallInt
+  name         String           @map("nm") @db.VarChar(20)
+  description  String?          @map("dscp") @db.VarChar(100)
+  deletedFlag  Int?             @default(0) @map("is_del") @db.SmallInt
+  createdBy    String?          @map("created_by") @db.VarChar(20)
+  createdDate  DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy    String?          @map("updated_by") @db.VarChar(20)
+  updatedDate  DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version      Int?             @default(0) @map("version") @db.SmallInt
+  jsonRoleList MasterJsonRole[]
+  userRoleList UserRole[]
+
+  @@map("tbl_mt_role")
+}
+
+model UserRole {
+  id          BigInt     @id
+  username    String     @db.VarChar(20)
+  user        User       @relation(fields: [username], references: [username])
+  roleId      Int        @map("mt_role_id") @db.SmallInt
+  role        MasterRole @relation(fields: [roleId], references: [id])
+  deletedFlag Int?       @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?    @map("created_by") @db.VarChar(20)
+  createdDate DateTime?  @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?    @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime?  @map("dt_updated") @db.Timestamp(6)
+  version     Int?       @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_user_role")
+}
+
+model MasterMenu {
+  id              Int          @id @map("id") @db.SmallInt
+  name            String       @map("nm") @db.VarChar(20)
+  icon            String?      @map("icon") @db.VarChar(20)
+  sequence        Int          @map("seq") @db.SmallInt
+  path            String?      @map("path") @db.VarChar(100)
+  menuParentId    Int?         @map("mt_menu_parent_id") @db.SmallInt
+  menuParent      MasterMenu?  @relation("parentMenu", fields: [menuParentId], references: [id])
+  color           String?      @default("E7E7E7") @map("color") @db.VarChar(6)
+  newFlag         Int?         @default(0) @map("is_new") @db.SmallInt
+  blankTargetFlag Int?         @default(0) @map("is_blank_target") @db.SmallInt
+  deletedFlag     Int?         @default(0) @map("is_del") @db.SmallInt
+  createdBy       String?      @map("created_by") @db.VarChar(20)
+  createdDate     DateTime?    @map("dt_created") @db.Timestamp(6)
+  updatedBy       String?      @map("updated_by") @db.VarChar(20)
+  updatedDate     DateTime?    @map("dt_updated") @db.Timestamp(6)
+  version         Int?         @default(0) @map("version") @db.SmallInt
+  menuChildren    MasterMenu[] @relation("parentMenu")
+
+  @@map("tbl_mt_menu")
+}
+
+model MasterMenuRole {
+  id          BigInt    @id @map("id")
+  menuId      Int       @map("mt_menu_id") @db.SmallInt
+  roleId      Int       @map("mt_role_id") @db.SmallInt
+  deletedFlag Int?      @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?   @map("created_by") @db.VarChar(20)
+  createdDate DateTime? @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?   @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime? @map("dt_updated") @db.Timestamp(6)
+  version     Int?      @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_mt_menu_role")
+}
+
+model MasterHttpMethod {
+  id          Int          @id @map("id")
+  code        String       @map("cd") @db.VarChar(7)
+  deletedFlag Int?         @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?      @map("created_by") @db.VarChar(20)
+  createdDate DateTime?    @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?      @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime?    @map("dt_updated") @db.Timestamp(6)
+  version     Int?         @default(0) @map("version") @db.SmallInt
+  jsonList    MasterJson[]
+
+  @@map("tbl_mt_http_method")
+}
+
+model MasterJson {
+  id           BigInt           @id @map("id")
+  name         String           @map("nm") @db.VarChar(50)
+  httpMethodId Int              @map("mt_http_method_id") @db.SmallInt
+  httpMethod   MasterHttpMethod @relation(fields: [httpMethodId], references: [id])
+  notation     String?          @map("notation") @db.VarChar(200)
+  deletedFlag  Int?             @default(0) @map("is_del") @db.SmallInt
+  createdBy    String?          @map("created_by") @db.VarChar(20)
+  createdDate  DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy    String?          @map("updated_by") @db.VarChar(20)
+  updatedDate  DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version      Int?             @default(0) @map("version") @db.SmallInt
+  jsonRoleList MasterJsonRole[]
+
+  @@map("tbl_mt_json")
+}
+
+model MasterJsonRole {
+  id          BigInt     @id @map("id")
+  jsonId      BigInt     @map("mt_json_id")
+  json        MasterJson @relation(fields: [jsonId], references: [id])
+  roleId      Int        @map("mt_role_id") @db.SmallInt
+  role        MasterRole @relation(fields: [roleId], references: [id])
+  deletedFlag Int?       @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?    @map("created_by") @db.VarChar(20)
+  createdDate DateTime?  @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?    @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime?  @map("dt_updated") @db.Timestamp(6)
+  version     Int?       @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_mt_json_role")
+}

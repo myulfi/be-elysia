@@ -1,0 +1,656 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model example_templates {
+  id           BigInt  @id @default(autoincrement())
+  name         String?
+  description  String?
+  value        BigInt?
+  amount       BigInt?
+  foreign_id   BigInt?
+  active_flag  BigInt?
+  deleted_flag BigInt?
+  created_by   String?
+  created_date String?
+  updated_by   String?
+  updated_date String?
+  version      BigInt?
+}
+
+model tbl_coll_api {
+  id         Int       @id @db.SmallInt
+  nm         String    @db.VarChar(50)
+  dscp       String?   @db.VarChar(255)
+  domain     String    @db.VarChar(100)
+  authz      String?   @db.VarChar(500)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_coll_api_req {
+  id                BigInt    @id
+  seq               Int?      @db.SmallInt
+  nm                String    @db.VarChar(50)
+  coll_api_id       Int?      @db.SmallInt
+  mt_http_method_id Int?      @db.SmallInt
+  path              String?   @db.VarChar(1000)
+  is_have_authz     Int?      @default(0) @db.SmallInt
+  body              String?   @db.VarChar(1000)
+  is_del            Int?      @default(0) @db.SmallInt
+  created_by        String?   @db.VarChar(50)
+  dt_created        DateTime? @db.Timestamp(6)
+  updated_by        String?   @db.VarChar(50)
+  dt_updated        DateTime? @db.Timestamp(6)
+  version           Int?      @default(0) @db.SmallInt
+}
+
+model tbl_deployment {
+  id          BigInt    @id
+  nm          String?   @db.VarChar(100)
+  dt_modified DateTime? @db.Timestamp(6)
+  is_del      Int?      @default(0) @db.SmallInt
+  created_by  String?   @db.VarChar(50)
+  dt_created  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  dt_updated  DateTime? @db.Timestamp(6)
+  version     Int?      @default(0) @db.SmallInt
+}
+
+model tbl_email_scheduler {
+  id               Int       @id @db.SmallInt
+  nm               String?   @db.VarChar(100)
+  dscp             String?   @db.VarChar(250)
+  receipt          String?   @db.VarChar(250)
+  carbon_copy      String?   @db.VarChar(250)
+  func             String?   @db.VarChar(50)
+  doc              String?   @db.VarChar(100)
+  period           Int?      @db.SmallInt
+  unit_period      String?   @db.VarChar(5)
+  dt_next_executed DateTime? @db.Timestamp(6)
+  is_avoid_weekend Int?      @default(0) @db.SmallInt
+  is_active        Int?      @default(0) @db.SmallInt
+  is_del           Int?      @default(0) @db.SmallInt
+  created_by       String?   @db.VarChar(50)
+  dt_created       DateTime? @db.Timestamp(6)
+  updated_by       String?   @db.VarChar(50)
+  dt_updated       DateTime? @db.Timestamp(6)
+  version          Int?      @default(0) @db.SmallInt
+}
+
+model tbl_example_template {
+  id         BigInt    @id
+  nm         String?   @db.VarChar(100)
+  dscp       String?   @db.VarChar(250)
+  val        Int?      @db.SmallInt
+  amt        Decimal?  @db.Decimal(15, 2)
+  dt         DateTime? @db.Date
+  foreign_id BigInt?
+  is_active  Int?      @db.SmallInt
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model tbl_mt_bts {
+  mt_tower_id      String?   @db.VarChar(20)
+  mt_old_tower_id  String?   @db.VarChar(20)
+  mt_tower_nm      String?   @db.VarChar(100)
+  mt_tower_type    String?   @db.VarChar(20)
+  mt_tower_class   String?   @db.VarChar(60)
+  mt_tower_status  String?   @db.VarChar(15)
+  mt_tower_remarks String?   @db.VarChar(100)
+  mt_site_id       String?   @db.VarChar(60)
+  mt_site_project  String?   @db.VarChar(20)
+  mt_site_network  String?   @db.VarChar(20)
+  mt_site_nm       String?   @db.VarChar(80)
+  mt_site_type     String?   @db.VarChar(20)
+  mt_site_status   String?   @db.VarChar(20)
+  mt_site_layer    String?   @db.VarChar(15)
+  mt_site_remarks  String?   @db.VarChar(100)
+  cell_nm          String?   @db.VarChar(50)
+  cell_type        String?   @db.VarChar(20)
+  cell_status      String?   @db.VarChar(20)
+  cell_remarks     String?   @db.VarChar(100)
+  dt_oss_updated   DateTime? @db.Timestamp(6)
+  pln_id           String?   @db.VarChar(20)
+  location_type    String?   @db.VarChar(20)
+  vendor           String?   @db.VarChar(10)
+  bsc              String?   @db.VarChar(30)
+  mt_bearer_id     String?   @db.VarChar(7)
+  cgi              String?   @db.VarChar(20)
+  mt_village_id    String?   @db.VarChar(10)
+  mt_village_nm    String?   @db.VarChar(50)
+  mt_district_id   String?   @db.VarChar(30)
+  mt_district_nm   String?   @db.VarChar(50)
+  mt_city_id       String?   @db.VarChar(10)
+  mt_city_nm       String?   @db.VarChar(50)
+  mt_province_id   String?   @db.VarChar(30)
+  mt_province_nm   String?   @db.VarChar(50)
+  mt_poc_cd        String?   @db.VarChar(20)
+  mt_poc_nm        String?   @db.VarChar(50)
+  mt_region_nm     String?   @db.VarChar(50)
+  long             String?   @db.VarChar(50)
+  lat              String?   @db.VarChar(50)
+  ep               String?   @db.VarChar(20)
+  next_plan        String?   @db.VarChar(100)
+  category         String?   @db.VarChar(20)
+  dt_created       DateTime? @db.Timestamp(6)
+  dt_updated       DateTime? @db.Timestamp(6)
+  project_status   String?   @db.VarChar(40)
+  spk_status       String?   @db.VarChar(35)
+  dt_spk           DateTime? @db.Timestamp(6)
+  dt_sto           DateTime? @db.Timestamp(6)
+  dt_rfi           DateTime? @db.Timestamp(6)
+
+  @@ignore
+}
+
+model tbl_mt_city {
+  id             Int       @id @db.SmallInt
+  nm             String?   @db.VarChar(30)
+  mt_province_id Int?      @db.SmallInt
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_city_coord {
+  id         BigInt    @id
+  mt_city_id Int       @db.SmallInt
+  region_seq Int?      @db.SmallInt
+  edge_seq   Int?      @db.SmallInt
+  lat        Float?
+  long       Float?
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_country {
+  id         Int       @id @db.SmallInt
+  cd         String    @db.VarChar(3)
+  nm         String    @db.VarChar(30)
+  dscp       String?   @db.VarChar(100)
+  mcc        String?   @db.VarChar(3)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_database_type {
+  id         Int       @id @db.SmallInt
+  nm         String?   @db.VarChar(50)
+  driver     String?   @db.VarChar(50)
+  url        String?   @db.VarChar(350)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+  pagination String?   @db.VarChar(50)
+}
+
+model tbl_mt_district {
+  id         Int       @id
+  nm         String?   @db.VarChar(30)
+  dscp       String?   @db.VarChar(50)
+  mt_city_id Int?      @db.SmallInt
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_ext_database {
+  id                  Int       @id @db.SmallInt
+  cd                  String    @db.VarChar(100)
+  dscp                String?   @db.VarChar(800)
+  mt_database_type_id Int       @db.SmallInt
+  username            String    @db.VarChar(200)
+  password            String    @db.VarChar(200)
+  db_connection       String?   @db.VarChar(350)
+  is_lock             Int?      @default(1) @db.SmallInt
+  is_del              Int?      @default(0) @db.SmallInt
+  created_by          String?   @db.VarChar(50)
+  dt_created          DateTime? @db.Timestamp(6)
+  updated_by          String?   @db.VarChar(50)
+  dt_updated          DateTime? @db.Timestamp(6)
+  version             Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_ext_database_query {
+  id                 BigInt    @id
+  dscp               String    @db.VarChar(800)
+  mt_ext_database_id Int       @db.SmallInt
+  query              String
+  is_del             Int?      @default(0) @db.SmallInt
+  created_by         String?   @db.VarChar(50)
+  dt_created         DateTime? @db.Timestamp(6)
+  updated_by         String?   @db.VarChar(50)
+  dt_updated         DateTime? @db.Timestamp(6)
+  version            Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_ext_database_role {
+  id                 BigInt    @id
+  mt_ext_database_id Int       @db.SmallInt
+  mt_role_id         Int       @db.SmallInt
+  is_select_allowed  Int?      @default(0) @db.SmallInt
+  is_drop_allowed    Int?      @default(0) @db.SmallInt
+  is_create_allowed  Int?      @default(0) @db.SmallInt
+  is_alter_allowed   Int?      @default(0) @db.SmallInt
+  is_insert_allowed  Int?      @default(0) @db.SmallInt
+  is_update_allowed  Int?      @default(0) @db.SmallInt
+  is_delete_allowed  Int?      @default(0) @db.SmallInt
+  is_del             Int?      @default(0) @db.SmallInt
+  created_by         String?   @db.VarChar(50)
+  dt_created         DateTime? @db.Timestamp(6)
+  updated_by         String?   @db.VarChar(50)
+  dt_updated         DateTime? @db.Timestamp(6)
+  version            Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_ext_server {
+  id          Int       @id @db.SmallInt
+  cd          String    @db.VarChar(50)
+  dscp        String?   @db.VarChar(500)
+  ip          String    @db.VarChar(15)
+  port        Int?      @default(22) @db.SmallInt
+  username    String    @db.VarChar(200)
+  password    String?   @db.VarChar(200)
+  private_key String?   @db.VarChar(200)
+  is_lock     Int?      @default(1) @db.SmallInt
+  is_del      Int?      @default(0) @db.SmallInt
+  created_by  String?   @db.VarChar(50)
+  dt_created  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  dt_updated  DateTime? @db.Timestamp(6)
+  version     Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_http_method {
+  id         Int       @id @db.SmallInt
+  cd         String    @db.VarChar(7)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_json {
+  id         BigInt    @id
+  nm         String    @db.VarChar(100)
+  notation   String?   @db.VarChar(200)
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_json_role {
+  id         BigInt    @id
+  mt_json_id BigInt
+  mt_role_id Int       @db.SmallInt
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_landing_page {
+  id         Int       @id @db.SmallInt
+  nm         String?   @db.VarChar(50)
+  path       String?   @db.VarChar(100)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_landing_page_role {
+  id                 BigInt    @id
+  mt_landing_page_id Int?      @db.SmallInt
+  mt_role_id         Int?      @db.SmallInt
+  created_by         String?   @db.VarChar(50)
+  dt_created         DateTime? @db.Timestamp(6)
+  updated_by         String?   @db.VarChar(50)
+  dt_updated         DateTime? @db.Timestamp(6)
+  version            Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_language_label {
+  screen_cd  String    @db.VarChar(30)
+  label_typ  String    @db.VarChar(30)
+  key_cd     String    @db.VarChar(40)
+  value_en   String    @db.VarChar(150)
+  value_id   String?   @db.VarChar(150)
+  value_ar   String?   @db.VarChar(300)
+  value_su   String?   @db.VarChar(150)
+  value_jv   String?   @db.VarChar(300)
+  value_hi   String?   @db.VarChar(500)
+  value_ru   String?   @db.VarChar(150)
+  value_ko   String?   @db.VarChar(150)
+  value_ja   String?   @db.VarChar(300)
+  value_th   String?   @db.VarChar(500)
+  value_zh   String?   @db.VarChar(300)
+  value_he   String?   @db.VarChar(300)
+  value_el   String?   @db.VarChar(300)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+
+  @@unique([screen_cd, label_typ, key_cd])
+}
+
+model tbl_mt_menu {
+  id                Int       @id @db.SmallInt
+  nm                String    @db.VarChar(50)
+  icon              String?   @db.VarChar(50)
+  seq               Int       @db.SmallInt
+  path              String?   @db.VarChar(100)
+  mt_menu_parent_id Int?      @db.SmallInt
+  color             String?   @default("E7E7E7") @db.VarChar(6)
+  is_new            Int?      @default(0) @db.SmallInt
+  is_blank_target   Int?      @default(0) @db.SmallInt
+  is_del            Int?      @default(0) @db.SmallInt
+  created_by        String?   @db.VarChar(50)
+  dt_created        DateTime? @db.Timestamp(6)
+  updated_by        String?   @db.VarChar(50)
+  dt_updated        DateTime? @db.Timestamp(6)
+  version           Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_menu_role {
+  id         BigInt    @id
+  mt_menu_id Int       @db.SmallInt
+  mt_role_id Int       @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_poc {
+  id            Int       @id @db.SmallInt
+  cd            String    @db.VarChar(10)
+  nm            String    @db.VarChar(1000)
+  dscp          String?   @db.VarChar(1000)
+  cgi           String    @db.VarChar(30)
+  gmt_time_diff Int?      @db.SmallInt
+  transit_cd    String?   @db.VarChar(30)
+  is_dummy      Int?      @default(0) @db.SmallInt
+  is_del        Int?      @default(0) @db.SmallInt
+  created_by    String?   @db.VarChar(50)
+  dt_created    DateTime? @db.Timestamp(6)
+  updated_by    String?   @db.VarChar(50)
+  dt_updated    DateTime? @db.Timestamp(6)
+  version       Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_poc_coord {
+  id         BigInt    @id
+  mt_poc_id  Int       @db.SmallInt
+  region_seq Int?      @db.SmallInt
+  edge_seq   Int?      @db.SmallInt
+  lat        Float?
+  long       Float?
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_procedure {
+  id                 BigInt    @id
+  nm                 String    @db.VarChar(1000)
+  parameter          String    @db.VarChar(1000)
+  is_have_pagination Int?      @db.SmallInt
+  is_del             Int?      @default(0) @db.SmallInt
+  created_by         String?   @db.VarChar(50)
+  dt_created         DateTime? @db.Timestamp(6)
+  updated_by         String?   @db.VarChar(50)
+  dt_updated         DateTime? @db.Timestamp(6)
+  version            Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_province {
+  id         Int       @id @db.SmallInt
+  nm         String?   @db.VarChar(30)
+  dscp       String?   @db.VarChar(50)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_province_coord {
+  id             BigInt    @id
+  mt_province_id Int       @db.SmallInt
+  region_seq     Int?      @db.SmallInt
+  edge_seq       Int?      @db.SmallInt
+  lat            Float?
+  long           Float?
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_query_operator {
+  id                Int       @id @db.SmallInt
+  cd                String    @db.VarChar(15)
+  nm                String    @db.VarChar(25)
+  is_need_value     Int?      @default(0) @db.SmallInt
+  is_multiple_value Int?      @default(0) @db.SmallInt
+  is_need_wildcard  Int?      @default(0) @db.SmallInt
+  is_del            Int?      @default(0) @db.SmallInt
+  created_by        String?   @db.VarChar(50)
+  dt_created        DateTime? @db.Timestamp(6)
+  updated_by        String?   @db.VarChar(50)
+  dt_updated        DateTime? @db.Timestamp(6)
+  version           Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_region {
+  cd         String    @id @db.VarChar(13)
+  nm         String?   @db.VarChar(100)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_region_coord {
+  cd         String    @id @db.VarChar(13)
+  nm         String?   @db.VarChar(100)
+  capital    String?   @db.VarChar(100)
+  lat        Float?
+  long       Float?
+  elev       Float?
+  timezone   Int?      @db.SmallInt
+  poligon    String?
+  status     Int?      @db.SmallInt
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_role {
+  id         Int       @id @db.SmallInt
+  nm         String    @db.VarChar(255)
+  dscp       String?   @db.VarChar(255)
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_user {
+  username          String    @id @db.VarChar(20)
+  nm                String?   @db.VarChar(200)
+  nick_nm           String?   @db.VarChar(20)
+  phone             String?   @db.VarChar(20)
+  supervisor        String?   @db.VarChar(20)
+  dt_active         DateTime? @db.Timestamp(6)
+  dt_login          DateTime? @db.Timestamp(6)
+  dt_logout         DateTime? @db.Timestamp(6)
+  ip                String?   @db.VarChar(20)
+  inc               Int?      @default(0)
+  ext_pass          String?   @db.VarChar(32)
+  ext_email         String?   @db.VarChar(30)
+  last_access       String?   @db.VarChar(2000)
+  agent             String?   @db.VarChar(300)
+  server_session_id String?   @db.VarChar(50)
+  dt_resign         DateTime? @db.Date
+  created_by        String?   @db.VarChar(50)
+  dt_created        DateTime? @db.Timestamp(6)
+  updated_by        String?   @db.VarChar(50)
+  dt_updated        DateTime? @db.Timestamp(6)
+  version           Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_user_role {
+  id               BigInt    @id
+  mt_user_username String    @db.VarChar(50)
+  mt_role_id       Int       @db.SmallInt
+  created_by       String?   @db.VarChar(50)
+  dt_created       DateTime? @db.Timestamp(6)
+  updated_by       String?   @db.VarChar(50)
+  dt_updated       DateTime? @db.Timestamp(6)
+  version          Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_village {
+  id             BigInt    @id
+  nm             String?   @db.VarChar(50)
+  dscp           String?   @db.VarChar(70)
+  mt_district_id Int?
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_zone_grp {
+  id         BigInt    @id
+  nm         String    @db.VarChar(50)
+  is_exclude Int?      @default(0) @db.SmallInt
+  is_del     Int?      @default(0) @db.SmallInt
+  created_by String?   @db.VarChar(50)
+  dt_created DateTime? @db.Timestamp(6)
+  updated_by String?   @db.VarChar(50)
+  dt_updated DateTime? @db.Timestamp(6)
+  version    Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_zone_grp_city {
+  id             BigInt    @id
+  mt_zone_grp_id BigInt
+  mt_city_id     Int       @db.SmallInt
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_zone_grp_district {
+  id             BigInt    @id
+  mt_zone_grp_id BigInt
+  mt_district_id Int
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_zone_grp_province {
+  id             BigInt    @id(map: "tbl_mt_zone_grp_poc_pkey")
+  mt_zone_grp_id BigInt
+  mt_province_id Int       @db.SmallInt
+  is_del         Int?      @default(0) @db.SmallInt
+  created_by     String?   @db.VarChar(50)
+  dt_created     DateTime? @db.Timestamp(6)
+  updated_by     String?   @db.VarChar(50)
+  dt_updated     DateTime? @db.Timestamp(6)
+  version        Int?      @default(0) @db.SmallInt
+}
+
+model tbl_mt_zone_type {
+  id          Int       @id @db.SmallInt
+  nm          String?   @db.VarChar(20)
+  dscp        String?   @db.VarChar(50)
+  is_domestic Int?      @db.SmallInt
+  is_del      Int?      @default(0) @db.SmallInt
+  created_by  String?   @db.VarChar(50)
+  dt_created  DateTime? @db.Timestamp(6)
+  updated_by  String?   @db.VarChar(50)
+  dt_updated  DateTime? @db.Timestamp(6)
+  version     Int?      @default(0) @db.SmallInt
+}
+
+model tbl_query_manual {
+  id                 BigInt    @id
+  mt_ext_database_id Int       @db.SmallInt
+  query              String
+  created_by         String?   @db.VarChar(50)
+  dt_created         DateTime? @db.Timestamp(6)
+  updated_by         String?   @db.VarChar(50)
+  dt_updated         DateTime? @db.Timestamp(6)
+  version            Int?      @default(0) @db.SmallInt
+}
