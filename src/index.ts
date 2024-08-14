@@ -1,12 +1,15 @@
 import { Elysia } from "elysia";
+import { cors } from '@elysiajs/cors'
 // import { logger } from '@grotto/logysia';
 import { generateToken } from "./controller/JsonWebTokenController"
 import jwt from "@elysiajs/jwt";
 import prisma from "../prisma/client";
 import Command from "./routers/command";
+import Test from "./routers/test";
 
 const app = new Elysia()
   // .use(logger({}))
+  .use(cors())
   .get("/", () => "Hello Elysia")
   .use(
     jwt({
@@ -15,7 +18,7 @@ const app = new Elysia()
     })
   )
   .post(
-    "/generate-token"
+    "/generate-token.json"
     , ({ jwt, body }) => generateToken(
       jwt
       , body as {
@@ -76,6 +79,7 @@ const app = new Elysia()
     , (app: any) =>
       app
         .use(Command)
+        .use(Test)
   )
   .listen(3000);
 

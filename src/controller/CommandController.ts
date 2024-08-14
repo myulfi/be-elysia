@@ -6,14 +6,24 @@ export async function menu() {
         const masterMenuList = await prisma.masterMenu.findMany({
             select: {
                 name: true
+                , sequence: true
+                , color: true
+                , icon: true
                 , path: true
-                , menuChildren: {
+                , children: {
                     select: {
                         name: true
+                        , sequence: true
+                        , color: true
+                        , icon: true
                         , path: true
-                        , menuChildren: {
+                        , children: {
                             select: {
                                 name: true
+                                , sequence: true
+                                , color: true
+                                , icon: true
+                                , path: true
                             }
                             , where: {
                                 deletedFlag: 0

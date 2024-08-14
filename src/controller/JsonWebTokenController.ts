@@ -4,6 +4,7 @@ import { jsonParse } from "../function/JsonHelper";
 export async function generateToken(jwt: any, body: any) {
     try {
         var error = null
+
         if (!body.username || !body.password) {
             error = "Credential must be filled"
         } else {
@@ -18,7 +19,7 @@ export async function generateToken(jwt: any, body: any) {
                         , where: { deletedFlag: 0 }
                     }
                 }
-                , where: { username: body.username, password: body.password }
+                , where: { username: atob(atob(atob(body.username))), password: atob(atob(atob(atob(body.password)))) }
             });
 
             if (user !== null) {

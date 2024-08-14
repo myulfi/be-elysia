@@ -1,17 +1,57 @@
 import prisma from "../../prisma/client";
-import { generateId, jsonParse } from "../function/Helper"
+import { generateId, jsonParse } from "../function/JsonHelper";
 
-export async function getExampleTemplates() {
+export async function getExampleTemplates(start: any, length: number, search: string, orderColumn: string, orderDir: string, value: any, date: any, range: any, request: any) {
     try {
-        const data = await prisma.exampleTemplate.findMany(
-            {
-                orderBy: { id: 'desc' }
+        //console.log(length, value, date, range)
+        const count = await prisma.exampleTemplate.count({
+            where: {
+                deletedFlag: 0
+                , OR: [
+                    {
+                        name: {
+                            contains: search
+                            , mode: 'insensitive'
+                        }
+                    }
+                    , {
+                        description: {
+                            contains: search
+                            , mode: 'insensitive'
+                        }
+                    }
+                ]
             }
-        );
+        })
+        const exampleTemplateList = await prisma.exampleTemplate.findMany({
+            skip: start
+            , take: length
+            , where: {
+                deletedFlag: 0
+                , OR: [
+                    {
+                        name: {
+                            contains: search
+                            , mode: 'insensitive'
+                        }
+                    }
+                    , {
+                        description: {
+                            contains: search
+                            , mode: 'insensitive'
+                        }
+                    }
+                ]
+            }
+            , orderBy: {
+                [orderColumn]: orderDir
+            }
+        });
 
         return {
-            success: true,
-            data: jsonParse(data)
+            success: true
+            , recordsTotal: count
+            , data: jsonParse(exampleTemplateList)
         };
     } catch (e: unknown) {
         console.error(`Error getting posts: ${e}`);
@@ -30,48 +70,38 @@ export async function createExampleTemplate(options: any) {
         options.version = 0
         options.date = new Date(options.date)
 
-        const data = await prisma.exampleTemplate.create({
+        const exampleTemplate = await prisma.exampleTemplate.create({
             data: options
         });
 
-        //return response json
         return {
-            success: true,
-            message: "Data Created Successfully!",
-            data: jsonParse(data)
+            data: jsonParse(exampleTemplate),
+            message: exampleTemplate != null ? "Data has already created" : "Data hasn't created ",
+            status: exampleTemplate != null ? "success" : "failed",
         }
     } catch (e: unknown) {
-        console.error(`Error creating post: ${e}`);
+        console.error(`Error : ${e}`);
     }
 }
 
 export async function getExampleTemplateById(id: number) {
     try {
-        const data = await prisma.exampleTemplate.findUnique({
+        const exampleTemplate = await prisma.exampleTemplate.findUnique({
             where: { id: id },
         });
 
-        if (!data) {
-            return {
-                sucess: true,
-                message: "Detail Data Post Not Found!",
-                data: null,
-            }
-        }
-
-        //return response json
         return {
-            success: true,
-            data: jsonParse(data),
+            data: jsonParse(exampleTemplate!),
+            status: exampleTemplate != null ? "success" : "failed",
         }
     } catch (e: unknown) {
-        console.error(`Error finding post: ${e}`);
+        console.error(`Error : ${e}`);
     }
 }
 
 export async function updateExampleTemplate(id: number, options: any) {
     try {
-        const data = await prisma.exampleTemplate.update({
+        const exampleTemplate = await prisma.exampleTemplate.update({
             where: {
                 id: id,
                 version: options.version
@@ -90,27 +120,29 @@ export async function updateExampleTemplate(id: number, options: any) {
         });
 
         return {
-            success: true,
-            message: "Data Updated Successfully!",
-            data: jsonParse(data),
+            data: jsonParse(exampleTemplate),
+            message: exampleTemplate != null ? "Data already has updated" : "You cannot update",
+            status: exampleTemplate != null ? "success" : "failed",
         }
     } catch (e: unknown) {
-        console.error(`Error updating post: ${e}`);
+        console.error(`Error : ${e}`);
     }
 }
 
-export async function deleteExampleTemplate(id: string) {
+export async function deleteExampleTemplate(id: number) {
     try {
-
-        await prisma.exampleTemplate.delete({
-            where: { id: parseInt(id) },
+        const exampleTemplate = await prisma.exampleTemplate.update({
+            data: {
+                deletedFlag: 1
+            }
+            , where: { id: id }
         });
 
         return {
-            success: true,
-            message: "Post Deleted Successfully!",
+            message: exampleTemplate !== null ? "Data have been deleted" : "Data haven't been deleted",
+            status: exampleTemplate !== null ? "success" : "failed",
         }
     } catch (e: unknown) {
-        console.error(`Error deleting post: ${e}`);
+        console.error(`Error : ${e}`);
     }
 }

@@ -87,7 +87,7 @@ model MasterMenu {
   updatedBy       String?      @map("updated_by") @db.VarChar(20)
   updatedDate     DateTime?    @map("dt_updated") @db.Timestamp(6)
   version         Int?         @default(0) @map("version") @db.SmallInt
-  menuChildren    MasterMenu[] @relation("parentMenu")
+  children        MasterMenu[] @relation("parentMenu")
 
   @@map("tbl_mt_menu")
 }
@@ -151,4 +151,23 @@ model MasterJsonRole {
   version     Int?       @default(0) @map("version") @db.SmallInt
 
   @@map("tbl_mt_json_role")
+}
+
+model ExampleTemplate {
+  id          BigInt    @id
+  name        String?   @map("nm") @db.VarChar(100)
+  description String?   @map("dscp") @db.VarChar(250)
+  value       Int?      @map("val") @db.SmallInt
+  amount      Decimal?  @map("amt") @db.Decimal(15, 2)
+  date        DateTime? @map("dt") @db.Date
+  foreignId   BigInt?   @map("foreign_id")
+  activeFlag  Int?      @map("is_active") @db.SmallInt
+  deletedFlag Int       @default(0) @map("is_del") @db.SmallInt
+  createdBy   String    @map("created_by") @db.VarChar(20)
+  createdDate DateTime  @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?   @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime? @map("dt_updated") @db.Timestamp(6)
+  version     Int       @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_example_template")
 }
