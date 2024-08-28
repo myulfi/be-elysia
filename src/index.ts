@@ -33,7 +33,7 @@ const app = new Elysia()
         try {
           const result = await jwt.verify(request.headers.get("authorization").substr("Bearer".length).trim());
           if (result == false) {
-            return error(401, 'Invalid Token')
+            return error(401, { data: "failed", message: "Invalid Token" })
           } else {
             let pattern = path;
             if (params !== undefined) {
@@ -63,7 +63,7 @@ const app = new Elysia()
               const masterJsonArray = masterJson.jsonRoleList.map((masterJson: any) => masterJson.roleId)
               const userRoleArrayArray = result.userBranchList.map((userBranch: any) => userBranch.roleId)
               if (masterJsonArray.filter(item => userRoleArrayArray.includes(item)).length === 0) {
-                return error(403, 'Forbidden')
+                return error(403, { data: "failed", message: "Forbidden" })
               }
             }
 
@@ -71,8 +71,7 @@ const app = new Elysia()
             request.userRoleList = result.userRoleList
           }
         } catch (e: unknown) {
-          console.log(e)
-          return error(401, 'Need Credential')
+          return error(401, { data: "failed", message: "Need Credential" })
         }
       }
     }

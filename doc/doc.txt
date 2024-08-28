@@ -1,0 +1,87 @@
+Installation in Local
+--------------------------------------------------------------------------------------
+| Description			| Command
+--------------------------------------------------------------------------------------
+| Install Bun			| D:\user\development\powershell -c "irm bun.sh/install.ps1 | iex"
+| Install ElysiaJS		| D:\user\development\bun create elysia be-elysia
+| Install Prism(ORM)	| D:\user\development\be-elysia>bun add prisma@latest --save-dev
+| Setup Prism(ORM)		| D:\user\development\be-elysia>bunx prisma init
+| Pull db [Optional]  	| D:\user\development\be-elysia>npx prisma db pull
+| Generate Prism(ORM)	| D:\user\development\be-elysia>bunx prisma generate
+| Install Prism Client	| D:\user\development\be-elysia>bun add @prisma/client@latest
+| Logger              	| D:\user\development\be-elysia>bun add @grotto/logysia
+| JWT					| D:\user\development\be-elysia>bun add @elysiajs/jwt
+| Bearer				| D:\user\development\be-elysia>bun add @elysiajs/bearer
+| CORS					| D:\user\development\be-elysia>bun add @elysiajs/cors
+| Run					| D:\user\development\be-elysia>npm run dev
+--------------------------------------------------------------------------------------
+
+Installation in Production
+--------------------------------------------------------------------------------------
+| Description			| Command
+--------------------------------------------------------------------------------------
+| Install Database
+--------------------------------------------------------------------------------------
+| Update Linux			| /home/ubuntu sudo apt update
+| Install Postgresql	| /home/ubuntu sudo apt install postgresql postgresql-contrib
+| Start Postgresql		| /home/ubuntu sudo systemctl start postgresql.service
+| Jump to Lib Postgres	| /home/ubuntu sudo -i -u postgres
+| Active psql		  	| /var/lib/postgresql psql -U postgres
+| Update password		| ALTER USER postgres PASSWORD 'new_password'
+| Create Database		| CREATE DATABASE your_db_name
+| Connect Database     	| \c your_db_name
+--------------------------------------------------------------------------------------
+| Install Nginx
+--------------------------------------------------------------------------------------
+| Install Nginx     	| /home/ubuntu sudo apt install nginx
+| Create Folder     	| /var/www mkdir be-elysia
+| CHMOD	Folder	     	| /home/ubuntu sudo chmod -R 777 /var/www/fe-sippuri
+| CHMOD	Log	     		| /home/ubuntu sudo chmod -R 777 /var/log/nginx
+| Create config    		| /home/ubuntu sudo vim /etc/nginx/sites-available/main.conf
+--------------------------------------------------------------------------------------
+server {
+	listen 8080;
+	listen [::]:8080;
+	server_name be-elysia.com;
+
+	location / {
+		proxy_pass http://localhost:3000;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_cache_bypass $http_upgrade;
+	}
+}
+--------------------------------------------------------------------------------------
+| Setup for access :80	| /home/ubuntu sudo rm /etc/nginx/sites-enabled/default
+| Configuration Changes	| /home/ubuntu sudo rm /etc/nginx/sites-enabled/main.conf
+| Update Configuration	| /home/ubuntu sudo vim /etc/nginx/sites-available/main.conf
+| Symlink				| /home/ubuntu sudo ln -s /etc/nginx/sites-available/main.conf /etc/nginx/sites-enabled/
+| Check Configuration	| /home/ubuntu sudo nginx -t
+| Reload Configuration	| /home/ubuntu sudo systemctl reload nginx
+| Restart Nginx			| /home/ubuntu sudo systemctl restart nginx.service
+| Start Nginx			| /home/ubuntu sudo systemctl start nginx
+| Status Nginx			| /home/ubuntu sudo systemctl status nginx
+--------------------------------------------------------------------------------------
+| Install Project
+--------------------------------------------------------------------------------------
+| Install Zip			| /home/ubuntu sudo apt install zip
+| Install Nodejs		| /home/ubuntu sudo apt install nodejs npm
+| Install Bun			| /home/ubuntu curl -fsSL https://bun.sh/install | bash
+| Copy Project			| /home/ubuntu cd /var/www/be-elysia
+| Install Library		| /var/www/be-elysia npm install
+--------------------------------------------------------------------------------------
+| Install PM2
+--------------------------------------------------------------------------------------
+| Install PM2			| /home/ubuntu npm install -g pm2
+| Build Project			| /var/www/be-elysia npm run build
+| Start Project			| /var/www/be-elysia pm2 start "npm run start" --name "be-elysia"
+| Save Start Project	| /var/www/be-elysia pm2 save
+| Startup Project		| /home/ubuntu pm2 startup
+| Status Project		| /home/ubuntu pm2 status
+| Stop Project			| /home/ubuntu pm2 stop be-elysia
+| Restart Project		| /home/ubuntu pm2 restart be-elysia
+| Delete Project		| /home/ubuntu pm2 delete be-elysia
+| Logs Project		    | /home/ubuntu pm2 logs be-elysia
+--------------------------------------------------------------------------------------
