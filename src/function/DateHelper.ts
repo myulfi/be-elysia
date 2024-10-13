@@ -34,13 +34,11 @@ export function getDate(dateString: string, format: string): Date {
 }
 
 export function getCurrentDate(): Date {
-    var current = new Date(formatDate(new Date(), "yyyy-MM-dd"))
+    var current = getCurrentDateTime()
     current.setHours(current.getHours() + Number(Bun.env.TIMEZONE))
     return current
 }
 
 export function getCurrentDateTime(): Date {
-    var current = new Date()
-    current.setHours(current.getHours() + Number(Bun.env.TIMEZONE))
-    return current
+    return new Date()
 }

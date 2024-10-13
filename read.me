@@ -1,12 +1,14 @@
 https://santrikoding.com/tutorial-restful-api-bun-dan-elysiajs-1-membuat-project-elysiajs
 Install Bun			| D:\myulfi\development\powershell -c "irm bun.sh/install.ps1 | iex"
 Install ElysiaJS	| D:\myulfi\development\bun create elysia be-elysia
-Run					| D:\myulfi\development\be-elysia>bun dev
-Install Prism(ORM)	| D:\myulfi\development\be-elysia>bun add prisma@5.13.0 --save-dev
+Install Prism(ORM)	| D:\myulfi\development\be-elysia>bun add prisma@latest --save-dev
 Setup Prism(ORM)	| D:\myulfi\development\be-elysia>bunx prisma init
-Pull db             | D:\myulfi\development\be-elysia>npx prisma db pull
+Pull db [Optional]  | D:\myulfi\development\be-elysia>npx prisma db pull
 Generate Prism(ORM)	| D:\myulfi\development\be-elysia>bunx prisma generate
-Install Prism Client| D:\myulfi\development\be-elysia>bun add @prisma/client@5.13.0
+Install Prism Client| D:\myulfi\development\be-elysia>bun add @prisma/client@latest
 Logger              | D:\myulfi\development\be-elysia>bun add @grotto/logysia
 JWT					| D:\myulfi\development\be-elysia>bun add @elysiajs/jwt
 Bearer				| D:\myulfi\development\be-elysia>bun add @elysiajs/bearer
+CORS				| D:\myulfi\development\be-elysia>bun add @elysiajs/cors
+Run					| D:\myulfi\development\be-elysia>bun dev
+Run					| D:\myulfi\development\be-elysia>npm run dev

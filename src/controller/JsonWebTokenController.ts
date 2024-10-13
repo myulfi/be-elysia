@@ -1,50 +1,61 @@
-import prisma from "../../prisma/client";
-import { jsonParse } from "../function/JsonHelper";
+import prisma from "../../prisma/client"
+import * as CommonHelper from "../function/CommonHelper"
+import * as ReturnHelper from "../function/ReturnHelper"
 
 export async function generateToken(jwt: any, body: any) {
     try {
         var error = null
 
         if (!body.username || !body.password) {
-            error = "Credential must be filled"
+            error = "common.information.credentialMustBeFilled"
         } else {
             const user = await prisma.user.findFirst({
                 select: {
-                    username: true
-                    , userRoleList: {
+                    username: true,
+                    userRoleList: {
                         select: {
-                            id: true
-                            , roleId: true
-                        }
-                        , where: { deletedFlag: 0 }
+                            id: true,
+                            roleId: true
+                        },
+                        where: { deletedFlag: 0 }
                     }
+                },
+                where: {
+                    // OR: [
+                    //     {
+                    //         username: atob(atob(atob(body.username))),
+                    //         password: atob(atob(atob(atob(body.password))))
+                    //     },
+                    //     {
+                    //         username: body.username,
+                    //         password: body.password
+                    //     }
+                    // ]
+                    username: body.username,
+                    password: body.password
                 }
-                , where: { username: atob(atob(atob(body.username))), password: atob(atob(atob(atob(body.password)))) }
-            });
+            })
 
             if (user !== null) {
                 const token = await jwt.sign({
-                    username: user.username
-                    , userRoleList: jsonParse(user.userRoleList)
+                    username: user.username,
+                    userRoleList: CommonHelper.jsonParse(user.userRoleList)
                 })
 
-                return {
-                    status: "success"
-                    , data: {
-                        token: token
-                        , username: user.username
+                return ReturnHelper.dataResponse({
+                    token: token,
+                    user: {
+                        username: user.username,
                     }
-                }
+                })
             } else {
-                error = "Credential is invalid"
+                error = "common.information.credentialIsInvalid"
             }
         }
 
-        return {
-            status: "failed"
-            , message: error
-        }
+        return ReturnHelper.failedResponse(error)
     } catch (e: unknown) {
-        console.error(`Error generate token: ${e}`)
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
     }
 }

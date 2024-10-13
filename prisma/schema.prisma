@@ -50,6 +50,7 @@ model MasterRole {
   version      Int?             @default(0) @map("version") @db.SmallInt
   jsonRoleList MasterJsonRole[]
   userRoleList UserRole[]
+  menuRoleList MasterMenuRole[]
 
   @@map("tbl_mt_role")
 }
@@ -71,37 +72,40 @@ model UserRole {
 }
 
 model MasterMenu {
-  id              Int          @id @map("id") @db.SmallInt
-  name            String       @map("nm") @db.VarChar(20)
-  icon            String?      @map("icon") @db.VarChar(20)
-  sequence        Int          @map("seq") @db.SmallInt
-  path            String?      @map("path") @db.VarChar(100)
-  menuParentId    Int?         @map("mt_menu_parent_id") @db.SmallInt
-  menuParent      MasterMenu?  @relation("parentMenu", fields: [menuParentId], references: [id])
-  color           String?      @default("E7E7E7") @map("color") @db.VarChar(6)
-  newFlag         Int?         @default(0) @map("is_new") @db.SmallInt
-  blankTargetFlag Int?         @default(0) @map("is_blank_target") @db.SmallInt
-  deletedFlag     Int?         @default(0) @map("is_del") @db.SmallInt
-  createdBy       String?      @map("created_by") @db.VarChar(20)
-  createdDate     DateTime?    @map("dt_created") @db.Timestamp(6)
-  updatedBy       String?      @map("updated_by") @db.VarChar(20)
-  updatedDate     DateTime?    @map("dt_updated") @db.Timestamp(6)
-  version         Int?         @default(0) @map("version") @db.SmallInt
-  children        MasterMenu[] @relation("parentMenu")
+  id              Int              @id @map("id") @db.SmallInt
+  name            String           @map("nm") @db.VarChar(20)
+  icon            String?          @map("icon") @db.VarChar(20)
+  sequence        Int              @map("seq") @db.SmallInt
+  path            String?          @map("path") @db.VarChar(100)
+  menuParentId    Int?             @map("mt_menu_parent_id") @db.SmallInt
+  menuParent      MasterMenu?      @relation("parentMenu", fields: [menuParentId], references: [id])
+  color           String?          @default("E7E7E7") @map("color") @db.VarChar(6)
+  newFlag         Int?             @default(0) @map("is_new") @db.SmallInt
+  blankTargetFlag Int?             @default(0) @map("is_blank_target") @db.SmallInt
+  deletedFlag     Int?             @default(0) @map("is_del") @db.SmallInt
+  createdBy       String?          @map("created_by") @db.VarChar(20)
+  createdDate     DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy       String?          @map("updated_by") @db.VarChar(20)
+  updatedDate     DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version         Int?             @default(0) @map("version") @db.SmallInt
+  children        MasterMenu[]     @relation("parentMenu")
+  menuRoleList    MasterMenuRole[]
 
   @@map("tbl_mt_menu")
 }
 
 model MasterMenuRole {
-  id          BigInt    @id @map("id")
-  menuId      Int       @map("mt_menu_id") @db.SmallInt
-  roleId      Int       @map("mt_role_id") @db.SmallInt
-  deletedFlag Int?      @default(0) @map("is_del") @db.SmallInt
-  createdBy   String?   @map("created_by") @db.VarChar(20)
-  createdDate DateTime? @map("dt_created") @db.Timestamp(6)
-  updatedBy   String?   @map("updated_by") @db.VarChar(20)
-  updatedDate DateTime? @map("dt_updated") @db.Timestamp(6)
-  version     Int?      @default(0) @map("version") @db.SmallInt
+  id          BigInt     @id @map("id")
+  menuId      Int        @map("mt_menu_id") @db.SmallInt
+  menu        MasterMenu @relation(fields: [menuId], references: [id])
+  roleId      Int        @map("mt_role_id") @db.SmallInt
+  role        MasterRole @relation(fields: [roleId], references: [id])
+  deletedFlag Int?       @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?    @map("created_by") @db.VarChar(20)
+  createdDate DateTime?  @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?    @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime?  @map("dt_updated") @db.Timestamp(6)
+  version     Int?       @default(0) @map("version") @db.SmallInt
 
   @@map("tbl_mt_menu_role")
 }
@@ -151,6 +155,54 @@ model MasterJsonRole {
   version     Int?       @default(0) @map("version") @db.SmallInt
 
   @@map("tbl_mt_json_role")
+}
+
+model MasterLanguage {
+  id                Int                   @id @map("id") @db.SmallInt
+  code              String                @map("cd") @db.VarChar(2)
+  name              String                @map("nm") @db.VarChar(20)
+  deletedFlag       Int?                  @default(0) @map("is_del") @db.SmallInt
+  createdBy         String                @map("created_by") @db.VarChar(20)
+  createdDate       DateTime              @map("dt_created") @db.Timestamp(6)
+  updatedBy         String?               @map("updated_by") @db.VarChar(20)
+  updatedDate       DateTime?             @map("dt_updated") @db.Timestamp(6)
+  version           Int?                  @default(0) @map("version") @db.SmallInt
+  languageValueList MasterLanguageValue[]
+
+  @@map("tbl_mt_lang")
+}
+
+model MasterLanguageKey {
+  id                BigInt                @id @map("id")
+  screenCode        String                @map("screen_cd") @db.VarChar(30)
+  labelType         String                @map("label_typ") @db.VarChar(30)
+  keyCode           String                @map("key_cd") @db.VarChar(30)
+  deletedFlag       Int?                  @default(0) @map("is_del") @db.SmallInt
+  createdBy         String                @map("created_by") @db.VarChar(20)
+  createdDate       DateTime              @map("dt_created") @db.Timestamp(6)
+  updatedBy         String?               @map("updated_by") @db.VarChar(20)
+  updatedDate       DateTime?             @map("dt_updated") @db.Timestamp(6)
+  version           Int?                  @default(0) @map("version") @db.SmallInt
+  languageValueList MasterLanguageValue[]
+
+  @@map("tbl_mt_lang_key")
+}
+
+model MasterLanguageValue {
+  id            BigInt            @id @map("id")
+  languageId    Int               @map("mt_lang_id") @db.SmallInt
+  language      MasterLanguage    @relation(fields: [languageId], references: [id])
+  languageKeyId BigInt            @map("mt_lang_key_id")
+  languageKey   MasterLanguageKey @relation(fields: [languageKeyId], references: [id])
+  value         String            @map("value") @db.VarChar(150)
+  deletedFlag   Int?              @default(0) @map("is_del") @db.SmallInt
+  createdBy     String            @map("created_by") @db.VarChar(20)
+  createdDate   DateTime          @map("dt_created") @db.Timestamp(6)
+  updatedBy     String?           @map("updated_by") @db.VarChar(20)
+  updatedDate   DateTime?         @map("dt_updated") @db.Timestamp(6)
+  version       Int?              @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_mt_lang_value")
 }
 
 model ExampleTemplate {
