@@ -25,7 +25,7 @@ export const IntegerIdArrayModel = t.Object({
     }),
 })
 
-export const TablePaginationModel = t.Object({
+export const TableModel = t.Object({
     start: t.Number(),
     length: t.Number(),
     search: t.String(),

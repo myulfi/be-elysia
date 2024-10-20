@@ -7,7 +7,7 @@ const ExampleTemplateController = new Elysia({})
     .get(
         "/example-template.json",
         ({ query }) => ExampleTemplateFacade.get(query),
-        { query: CommonModel.TablePaginationModel }
+        { query: CommonModel.TableModel }
     )
     .get(
         "/:id/example-template.json",
@@ -27,7 +27,7 @@ const ExampleTemplateController = new Elysia({})
         }
     )
     .delete(
-        '/:ids',
+        '/:ids/example-template.json',
         ({ request, params: { ids } }) => ExampleTemplateFacade.remove(request, ids),
         { params: CommonModel.NumericIdArrayModel }
     )

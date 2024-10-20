@@ -5,7 +5,7 @@ import * as ReturnHelper from "../../function/ReturnHelper"
 import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
 
-export async function get(query: typeof CommonModel.TablePaginationModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static) {
     try {
         let condition = {}
 
