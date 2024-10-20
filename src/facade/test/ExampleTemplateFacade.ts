@@ -1,52 +1,45 @@
 import prisma from "../../../prisma/client"
+import * as CommonModel from "../../model/CommonModel"
+import * as TestModel from "../../model/TestModel"
 import * as ReturnHelper from "../../function/ReturnHelper"
 import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
 
-export async function get(start: any, length: number, search: string, orderColumn: string, orderDir: string) {
+export async function get(query: typeof CommonModel.TablePaginationModel.static) {
     try {
-        const count = await prisma.exampleTemplate.count({
-            where: {
-                deletedFlag: 0,
+        let condition = {}
+
+        condition = {
+            ...condition,
+            deletedFlag: 0,
+        }
+
+        if (query.search.length > 0) {
+            condition = {
+                ...condition,
                 OR: [
                     {
                         name: {
-                            contains: unescape(search),
+                            contains: unescape(query.search),
                             mode: 'insensitive'
                         }
                     },
                     {
                         description: {
-                            contains: unescape(search),
+                            contains: unescape(query.search),
                             mode: 'insensitive'
                         }
                     }
                 ]
             }
-        })
+        }
+
+        const count = await prisma.exampleTemplate.count({ where: condition })
         const exampleTemplateList = await prisma.exampleTemplate.findMany({
-            skip: start,
-            take: length,
-            where: {
-                deletedFlag: 0,
-                OR: [
-                    {
-                        name: {
-                            contains: search,
-                            mode: 'insensitive'
-                        }
-                    },
-                    {
-                        description: {
-                            contains: search,
-                            mode: 'insensitive'
-                        }
-                    }
-                ]
-            },
-            orderBy: {
-                [orderColumn]: orderDir
-            }
+            skip: query.start,
+            take: query.length,
+            where: condition,
+            orderBy: { [query.orderColumn]: query.orderDir }
         })
 
         return ReturnHelper.pageResponse(count, exampleTemplateList)
@@ -69,19 +62,23 @@ export async function getById(id: number) {
     }
 }
 
-export async function create(request: any, options: any) {
+export async function create(request: any, options: typeof TestModel.ExampleTemplateModel.static) {
     try {
-        options.id = CommonHelper.generateId()
-        options.deletedFlag = 0
-        options.createdBy = request.username
-        options.createdDate = DateHelper.getCurrentDateTime()
-        options.updatedBy = null
-        options.updatedDate = null
-        options.version = 0
-        options.date = new Date(options.date)
-
         const exampleTemplate = await prisma.exampleTemplate.create({
-            data: options
+            data: {
+                id: CommonHelper.generateId(),
+                name: options.name,
+                value: options.value,
+                amount: options.amount,
+                date: options.date,
+                activeFlag: options.activeFlag,
+                deletedFlag: 0,
+                createdBy: request.username,
+                createdDate: DateHelper.getCurrentDateTime(),
+                updatedBy: null,
+                updatedDate: null,
+                version: 0,
+            }
         });
 
         return ReturnHelper.response(exampleTemplate !== null, "common.information.created", "common.information.failed")
@@ -91,7 +88,7 @@ export async function create(request: any, options: any) {
     }
 }
 
-export async function update(request: any, id: number, options: any) {
+export async function update(request: any, id: number, options: typeof TestModel.ExampleTemplateModel.static) {
     try {
         const exampleTemplate = await prisma.exampleTemplate.update({
             where: {
@@ -103,7 +100,7 @@ export async function update(request: any, id: number, options: any) {
                 description: options.description,
                 // value: options.value,
                 // amount: options.amount,
-                // date: new Date(options.date),
+                // date: options.date,
                 // activeFlag: options.activeFlag,
                 updatedBy: request.username,
                 updatedDate: DateHelper.getCurrentDateTime(),

@@ -23,6 +23,6 @@ const Main = new Elysia({})
         .put("/generate-language.json", () => MainFacade.generateLanguage())
         .get("/role.json", () => MainFacade.json())
         .get("/menu.json", ({ request }) => MainFacade.menu(request))
-    );
+    )
 
-export default Main;
+export default Main

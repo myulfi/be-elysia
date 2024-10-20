@@ -1,5 +1,5 @@
-import fs from 'fs'
-import path from 'path'
+import fs from "fs"
+import path from "path"
 
 export async function save(folder: string, file: File): Promise<string> {
     if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true })
@@ -27,7 +27,7 @@ export function get(filePath: string) {
 }
 
 export function getImage(filePath: string) {
-    const fileContent = fs.readFileSync(filePath);
+    const fileContent = fs.readFileSync(filePath)
     return fileContent
 }
 

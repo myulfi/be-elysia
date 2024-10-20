@@ -1,6 +1,6 @@
 import { Elysia } from "elysia"
-import { cors } from '@elysiajs/cors'
-// import { logger } from '@grotto/logysia'
+import { cors } from "@elysiajs/cors"
+// import { logger } from "@grotto/logysia"
 import { generateToken } from "./controller/JsonWebTokenController"
 import jwt from "@elysiajs/jwt"
 import prisma from "../prisma/client"
@@ -32,7 +32,7 @@ const app = new Elysia()
         {
             async beforeHandle({ jwt, request, path, params, error }: any) {
                 try {
-                    const result = await jwt.verify(request.headers.get("authorization").substr("Bearer".length).trim());
+                    const result = await jwt.verify(request.headers.get("authorization").substr("Bearer".length).trim())
                     if (result == false) {
                         return error(401, ReturnHelper.failedResponse("common.information.invalidToken"))
                     } else {
@@ -75,14 +75,14 @@ const app = new Elysia()
                     return error(401, ReturnHelper.failedResponse("common.information.needCredential"))
                 }
             }
-        }
-        , (app: any) =>
+        },
+        (app: any) =>
             app
                 .use(Main)
                 .use(Test)
     )
-    .listen(3000);
+    .listen(3000)
 
 console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
-);
+)

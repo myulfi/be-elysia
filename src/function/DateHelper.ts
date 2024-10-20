@@ -1,5 +1,7 @@
 export function formatDate(date: Date, format: string): string {
     const year = date.getFullYear().toString()
+    const fullMonthNameArray = ['January', 'February', 'March', 'April', 'May', 'Juny', 'July', 'August', 'September', 'October', 'November', 'December']
+    const monthNameArray = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const day = date.getDate().toString().padStart(2, '0')
     const hours = date.getHours().toString().padStart(2, '0')
@@ -8,6 +10,8 @@ export function formatDate(date: Date, format: string): string {
 
     return format
         .replace('yyyy', year)
+        .replace('MMMM', fullMonthNameArray[Number(month) - 1])
+        .replace('MMM', monthNameArray[Number(month) - 1])
         .replace('MM', month)
         .replace('dd', day)
         .replace('HH', hours)
@@ -30,7 +34,7 @@ export function getDate(dateString: string, format: string): Date {
     const minute = indexMinute >= 0 ? Number(dateString.substring(indexMinute, indexMinute + 2)) : 0
     const second = indexSecond >= 0 ? Number(dateString.substring(indexSecond, indexSecond + 2)) : 0
 
-    return new Date(year, month, day, hour + Number(Bun.env.TIMEZONE), minute, second);
+    return new Date(year, month, day, hour + Number(Bun.env.TIMEZONE), minute, second)
 }
 
 export function getCurrentDate(): Date {

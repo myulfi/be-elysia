@@ -1,9 +1,13 @@
+export function formatMoney(value: number): string {
+    return value.toString().replace(".", ",").replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+}
+
 export function splitId(ids: string): Array<bigint> {
-    const idArray = [];
+    const idArray = []
     for (let i = 0; i < ids.length; i += 16) {
-        idArray.push(BigInt(ids.substring(i, i + 16)));
+        idArray.push(BigInt(ids.substring(i, i + 16)))
     }
-    return idArray;
+    return idArray
 }
 
 export function jsonParse(data: object) {

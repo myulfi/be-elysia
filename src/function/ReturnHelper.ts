@@ -12,7 +12,7 @@ export function pageResponse(count: number, data: object) {
         status: "success",
         recordsTotal: count,
         data: CommonHelper.jsonParse(data)
-    };
+    }
 }
 
 export function dataResponse(data: object) {

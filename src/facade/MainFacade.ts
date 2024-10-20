@@ -59,7 +59,7 @@ export async function generateLanguage() {
             }
         })
 
-        let masterLangueValueList = null;
+        let masterLangueValueList = null
         masterLanguageList.forEach(async masterLanguage => {
             masterLangueValueList = await prisma.masterLanguageValue.findMany({
                 select: {

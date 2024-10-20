@@ -14,6 +14,10 @@ export const NumericIdArrayModel = t.Object({
     }),
 })
 
+export const IntegerIdModel = t.Object({
+    id: t.Numeric(),
+})
+
 export const IntegerIdArrayModel = t.Object({
     ids: t.String({
         format: "regex",
@@ -21,9 +25,9 @@ export const IntegerIdArrayModel = t.Object({
     }),
 })
 
-export const PagingModel = t.Object({
-    start: t.Numeric(),
-    length: t.Numeric(),
+export const TablePaginationModel = t.Object({
+    start: t.Number(),
+    length: t.Number(),
     search: t.String(),
     orderColumn: t.String(),
     orderDir: t.String({

@@ -21,5 +21,8 @@ export const ExampleTemplateModel = t.Object({
     activeFlag: t.Number({
         minimum: 0,
         maximum: 1
+    }),
+    version: t.Number({
+        default: 0,
     })
 })
