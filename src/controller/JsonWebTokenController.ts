@@ -12,6 +12,7 @@ export async function generateToken(jwt: any, body: any) {
             const user = await prisma.user.findFirst({
                 select: {
                     username: true,
+                    nickName: true,
                     userRoleList: {
                         select: {
                             id: true,
@@ -21,18 +22,16 @@ export async function generateToken(jwt: any, body: any) {
                     }
                 },
                 where: {
-                    // OR: [
-                    //     {
-                    //         username: atob(atob(atob(body.username))),
-                    //         password: atob(atob(atob(atob(body.password))))
-                    //     },
-                    //     {
-                    //         username: body.username,
-                    //         password: body.password
-                    //     }
-                    // ]
-                    username: body.username,
-                    password: body.password
+                    OR: [
+                        {
+                            username: atob(atob(atob(body.username))),
+                            password: atob(atob(atob(atob(body.password))))
+                        },
+                        // {
+                        //     username: body.username,
+                        //     password: body.password
+                        // }
+                    ]
                 }
             })
 
@@ -45,7 +44,8 @@ export async function generateToken(jwt: any, body: any) {
                 return ReturnHelper.dataResponse({
                     token: token,
                     user: {
-                        username: user.username,
+                        nickName: user.nickName,
+                        roleList: user.userRoleList.map((userRole: any) => userRole.roleId),
                     }
                 })
             } else {

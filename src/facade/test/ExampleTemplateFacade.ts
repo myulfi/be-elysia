@@ -79,7 +79,7 @@ export async function create(request: any, options: typeof TestModel.ExampleTemp
                 updatedDate: null,
                 version: 0,
             }
-        });
+        })
 
         return ReturnHelper.response(exampleTemplate !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
@@ -106,7 +106,7 @@ export async function update(request: any, id: number, options: typeof TestModel
                 updatedDate: DateHelper.getCurrentDateTime(),
                 version: options.version + 1
             },
-        });
+        })
 
         return ReturnHelper.response(exampleTemplate !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {

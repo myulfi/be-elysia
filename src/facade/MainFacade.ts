@@ -47,59 +47,6 @@ export async function changePassword(request: any, options: any) {
     }
 }
 
-export async function generateLanguage() {
-    try {
-        const masterLanguageList = await prisma.masterLanguage.findMany({
-            select: {
-                id: true,
-                code: true,
-            },
-            where: {
-                deletedFlag: 0
-            }
-        })
-
-        let masterLangueValueList = null
-        masterLanguageList.forEach(async masterLanguage => {
-            masterLangueValueList = await prisma.masterLanguageValue.findMany({
-                select: {
-                    languageKey: {
-                        select: {
-                            screenCode: true,
-                            labelType: true,
-                            keyCode: true
-                        },
-                    },
-                    value: true,
-                },
-                where: {
-                    deletedFlag: 0,
-                    languageId: masterLanguage.id,
-                    languageKey: {
-                        deletedFlag: 0
-                    }
-                }
-            })
-
-            FileHelper.clearContent(`${Bun.env.ROOT_SRC_FOLDER}/language/${masterLanguage.code}.json`)
-            FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "{")
-            masterLangueValueList.forEach((masterLangueValue, index) => {
-                FileHelper.append(
-                    `${Bun.env.ROOT_SRC_FOLDER}/language`,
-                    `${masterLanguage.code}.json`,
-                    (index > 0 ? "," : "") + `"${masterLangueValue.languageKey.screenCode}.${masterLangueValue.languageKey.labelType}.${masterLangueValue.languageKey.keyCode}":"${masterLangueValue.value}"`
-                )
-            })
-            FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "}")
-        })
-
-        return ReturnHelper.successResponse("common.information.generated")
-    } catch (e: unknown) {
-        console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
-    }
-}
-
 export async function json() {
     try {
         const masterJsonList = await prisma.masterJson.findMany({

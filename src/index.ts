@@ -1,20 +1,21 @@
-import { Elysia } from "elysia"
-import { cors } from "@elysiajs/cors"
-// import { logger } from "@grotto/logysia"
-import { generateToken } from "./controller/JsonWebTokenController"
+import cors from "@elysiajs/cors"
 import jwt from "@elysiajs/jwt"
+import { Elysia } from "elysia"
+import * as ReturnHelper from "./function/ReturnHelper"
+import * as FileHelper from "./function/FileHelper"
+import { generateToken } from "./controller/JsonWebTokenController"
 import prisma from "../prisma/client"
 import Main from "./routers/main"
+import Master from "./routers/master"
+import Command from "./routers/command"
 import Test from "./routers/test"
-import * as ReturnHelper from "./function/ReturnHelper"
 
 const app = new Elysia()
-    // .use(logger({}))
-    .use(cors())
     .get("/", () => "Hello Elysia")
+    .use(cors())
     .use(
         jwt({
-            name: 'jwt',
+            name: "jwt",
             secret: Bun.env.JWT_SECRET!
         })
     )
@@ -28,6 +29,16 @@ const app = new Elysia()
             }
         )
     )
+    .get(
+        "/:lng/language.json",
+        ({ params: { lng } }) => {
+            try {
+                return JSON.parse(FileHelper.get(`${__dirname}/language/${lng}.json`))
+            } catch (e) {
+                console.log(e)
+            }
+        }
+    )
     .guard(
         {
             async beforeHandle({ jwt, request, path, params, error }: any) {
@@ -36,7 +47,7 @@ const app = new Elysia()
                     if (result == false) {
                         return error(401, ReturnHelper.failedResponse("common.information.invalidToken"))
                     } else {
-                        let pattern = path;
+                        let pattern = path
                         if (params !== undefined) {
                             const keyList = Object.keys(params)
                             for (let i = 0; i < keyList.length; i++) {
@@ -79,9 +90,11 @@ const app = new Elysia()
         (app: any) =>
             app
                 .use(Main)
+                .use(Master)
+                .use(Command)
                 .use(Test)
     )
-    .listen(3000)
+    .listen(Bun.env.SERVER_PORT!)
 
 console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
