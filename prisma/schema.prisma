@@ -205,6 +205,41 @@ model MasterLanguageValue {
   @@map("tbl_mt_lang_value")
 }
 
+model MasterAttendance {
+  id          Int            @id @map("id")
+  name        String         @map("nm") @db.VarChar(30)
+  deletedFlag Int?           @default(0) @map("is_del") @db.SmallInt
+  createdBy   String?        @map("created_by") @db.VarChar(20)
+  createdDate DateTime?      @map("dt_created") @db.Timestamp(6)
+  updatedBy   String?        @map("updated_by") @db.VarChar(20)
+  updatedDate DateTime?      @map("dt_updated") @db.Timestamp(6)
+  version     Int?           @default(0) @map("version") @db.SmallInt
+  branchList  MasterBranch[]
+
+  @@map("tbl_mt_attend")
+}
+
+model MasterBranch {
+  id              Int              @id @map("id")
+  name            String           @map("nm") @db.VarChar(20)
+  address         String           @map("addr") @db.VarChar(100)
+  latitude        Float?           @map("lat")
+  longitude       Float?           @map("long")
+  radius          Int              @map("radius")
+  attendanceId    Int              @map("attend")
+  attendance      MasterAttendance @relation(fields: [attendanceId], references: [id])
+  qrAttendanceIn  String           @map("qr_attend_in") @db.VarChar(6)
+  qrAttendanceOut String           @map("qr_attend_out") @db.VarChar(6)
+  deletedFlag     Int?             @default(0) @map("is_del") @db.SmallInt
+  createdBy       String?          @map("created_by") @db.VarChar(20)
+  createdDate     DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy       String?          @map("updated_by") @db.VarChar(20)
+  updatedDate     DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version         Int?             @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_mt_branch")
+}
+
 model ExampleTemplate {
   id          BigInt    @id
   name        String?   @map("nm") @db.VarChar(100)
