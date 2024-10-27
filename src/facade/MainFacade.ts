@@ -1,6 +1,5 @@
 import prisma from "../../prisma/client"
 import * as ReturnHelper from "../function/ReturnHelper"
-import * as FileHelper from "../function/FileHelper"
 
 export async function logout(request: any) {
     try {
@@ -132,20 +131,23 @@ export async function menu(request: any) {
                             where: {
                                 deletedFlag: 0,
                                 OR: roleList
-                            }
+                            },
+                            orderBy: { sequence: "asc" }
                         }
                     },
                     where: {
                         deletedFlag: 0,
                         OR: roleList
-                    }
+                    },
+                    orderBy: { sequence: "asc" }
                 }
             },
             where: {
                 deletedFlag: 0,
                 menuParentId: 0,
                 OR: roleList
-            }
+            },
+            orderBy: { sequence: "asc" }
         })
 
         return ReturnHelper.dataResponse(masterMenuList)

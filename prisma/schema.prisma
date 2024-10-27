@@ -228,8 +228,8 @@ model MasterBranch {
   radius          Int              @map("radius")
   attendanceId    Int              @map("attend")
   attendance      MasterAttendance @relation(fields: [attendanceId], references: [id])
-  qrAttendanceIn  String           @map("qr_attend_in") @db.VarChar(6)
-  qrAttendanceOut String           @map("qr_attend_out") @db.VarChar(6)
+  qrAttendanceIn  String?          @map("qr_attend_in") @db.VarChar(6)
+  qrAttendanceOut String?          @map("qr_attend_out") @db.VarChar(6)
   deletedFlag     Int?             @default(0) @map("is_del") @db.SmallInt
   createdBy       String?          @map("created_by") @db.VarChar(20)
   createdDate     DateTime?        @map("dt_created") @db.Timestamp(6)

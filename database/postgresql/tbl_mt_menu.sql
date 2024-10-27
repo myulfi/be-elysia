@@ -1,6 +1,6 @@
 CREATE TABLE tbl_mt_menu(
 	id SMALLINT PRIMARY KEY
-	, nm VARCHAR (20) NOT NULL
+	, nm VARCHAR (30) NOT NULL
 	, icon VARCHAR (20)
 	, seq SMALLINT NOT NULL
 	, path VARCHAR (100)
