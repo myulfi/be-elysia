@@ -1,7 +1,7 @@
 import Elysia from "elysia"
 import * as CommonModel from "../../model/CommonModel"
 import * as CommandModel from "../../model/CommandModel"
-import * as LanguageFacade from "../../facade/command/Language"
+import * as LanguageFacade from "../../facade/command/LanguageFacade"
 
 const LanguageController = new Elysia({})
     .get(

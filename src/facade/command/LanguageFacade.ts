@@ -226,12 +226,12 @@ export async function implement() {
             })
 
             FileHelper.clearContent(`${Bun.env.ROOT_SRC_FOLDER}/language/${masterLanguage.code}.json`)
-            FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "{")
+            FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "{\"\":\"\"")
             masterLangueValueList.forEach((masterLangueValue, index) => {
                 FileHelper.append(
                     `${Bun.env.ROOT_SRC_FOLDER}/language`,
                     `${masterLanguage.code}.json`,
-                    (index > 0 ? "," : "") + `"${masterLangueValue.languageKey.screenCode}.${masterLangueValue.languageKey.labelType}.${masterLangueValue.languageKey.keyCode}":"${masterLangueValue.value}"`
+                    `,"${masterLangueValue.languageKey.screenCode}.${masterLangueValue.languageKey.labelType}.${masterLangueValue.languageKey.keyCode}":"${masterLangueValue.value}"`
                 )
             })
             FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "}")
