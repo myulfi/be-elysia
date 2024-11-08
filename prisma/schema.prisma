@@ -157,6 +157,43 @@ model MasterJsonRole {
   @@map("tbl_mt_json_role")
 }
 
+model MasterDatabaseType {
+  id                   Int                @id @map("id") @db.SmallInt
+  name                 String             @map("nm") @db.VarChar(20)
+  driver               String?            @map("driver") @db.VarChar(50)
+  url                  String             @map("url") @db.VarChar(350)
+  pagination           String?            @map("pagination") @db.VarChar(50)
+  deletedFlag          Int?               @default(0) @map("is_del") @db.SmallInt
+  createdBy            String?            @map("created_by") @db.VarChar(20)
+  createdDate          DateTime?          @map("dt_created") @db.Timestamp(6)
+  updatedBy            String?            @map("updated_by") @db.VarChar(20)
+  updatedDate          DateTime?          @map("dt_updated") @db.Timestamp(6)
+  version              Int?               @default(0) @map("version") @db.SmallInt
+  externalDatabaseList ExternalDatabase[]
+
+  @@map("tbl_mt_database_type")
+}
+
+model ExternalDatabase {
+  id                 Int                @id @map("id") @db.SmallInt
+  code               String             @map("cd") @db.VarChar(20)
+  description        String?            @map("dscp") @db.VarChar(800)
+  databaseTypeId     Int                @map("mt_database_type_id") @db.SmallInt
+  databaseType       MasterDatabaseType @relation(fields: [databaseTypeId], references: [id])
+  username           String             @map("username") @db.VarChar(200)
+  password           String             @map("password") @db.VarChar(200)
+  databaseConnection String?            @map("db_connection") @db.VarChar(350)
+  lockedFlag         Int?               @default(1) @map("is_lock") @db.SmallInt
+  deletedFlag        Int?               @default(0) @map("is_del") @db.SmallInt
+  createdBy          String?            @map("created_by") @db.VarChar(20)
+  createdDate        DateTime?          @map("dt_created") @db.Timestamp(6)
+  updatedBy          String?            @map("updated_by") @db.VarChar(20)
+  updatedDate        DateTime?          @map("dt_updated") @db.Timestamp(6)
+  version            Int?               @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_ext_database")
+}
+
 model MasterLanguage {
   id                Int                   @id @map("id") @db.SmallInt
   code              String                @map("cd") @db.VarChar(2)

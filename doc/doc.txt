@@ -13,6 +13,10 @@ Installation in Local
 | JWT					| D:\user\development\be-elysia>bun add @elysiajs/jwt
 | Bearer				| D:\user\development\be-elysia>bun add @elysiajs/bearer
 | CORS					| D:\user\development\be-elysia>bun add @elysiajs/cors
+| Postgresql			| D:\user\development\be-elysia>npm install pg
+| Postgresql			| D:\user\development\be-elysia>npm install --save-dev @types/pg
+| MySQL					| D:\user\development\be-elysia>npm install mysql2
+| Oracle				| D:\user\development\be-elysia>npm install oracledb
 | Run					| D:\user\development\be-elysia>npm run dev
 --------------------------------------------------------------------------------------
 
