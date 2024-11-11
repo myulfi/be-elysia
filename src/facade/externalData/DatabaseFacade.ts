@@ -365,14 +365,23 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
         //     + "koko;\r\n"
         //     + "END;\r\n"
         //     + "SELECT * FROM tbl_mt_poc"
-        query = "INSERT INTO table_1;INSERT INTO table_1;INSERT INTO table_2;\r\n" +
-            "UPDATE table_1 SET;UPDATE table_2 SET;UPDATE table_1 SET 1=1 WHERE 1;huehiuehui;UPDATE table_3 SET;"
+
+        // query = "INSERT INTO table_1;SELECT * FROM tbl_mt_menu;INSERT INTO table_1;INSERT INTO table_2;\r\n" +
+        //     "UPDATE table_1 SET;UPDATE table_2 SET;UPDATE table_1 SET 1=1 WHERE 1;huehiuehui;UPDATE table_3 SET;"
+        // query = "SELECT id, nm FROM tbl_mt_menu"
+        // query = "CREATE TABLE tbl_temp (id SMALLINT, nm VARCHAR(2));"
+        // query = "INSERT INTO tbl_temp VALUES (2, 'bb'), (3, 'cc'), (4, 'dd')"
+        //query = "UPDATE tbl_temp SET nm = 'ee' WHERE id = 4"
+        //query = "DELETE FROM tbl_temp WHERE id = 4"
+        query = "SELECT * FROM tbl_temp"
+
+        let objectResult = null
 
         let queryResult = null
         let queryResultList: CommonInterface.QueryResult[] = []
         const regex = new RegExp(CommonConstants.FLAG.YES == bulkExecuted ? RegexConstants.MANUAL_QUERY_BULK : RegexConstants.MANUAL_QUERY, "gi")
         const queryArray = [...query.matchAll(regex)]
-        queryArray.forEach((element) => {
+        for (const element of queryArray) {
             if (element[0].length > 1) {
                 queryResult = getQueryResult(element[0])
 
@@ -383,8 +392,7 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                     if (CommonConstants.FLAG.NO === selectAllowedFlag) {
                         queryResult.error = "Forbidden to do SELECT action"
                     } else {
-                        //getDataSelection
-                        // console.log(queryResult.query)
+                        objectResult = await getDataSelection(id, queryResult.query, 0, 0)
                     }
                 } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP|CREATE|ALTER)" }), "si").test(queryResult.query)) {
                     if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === dropAllowedFlag) {
@@ -394,9 +402,7 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                     } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(ALTER)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === alterAllowedFlag) {
                         queryResult.error = "Forbidden to do ALTER action"
                     } else {
-                        //dataDefinition
-                        // console.log(queryResult.query)
-                        queryResult.row = 8
+                        queryResult = await dataDefinition(id, queryResult)
                     }
                 } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT|UPDATE|DELETE)" }), "si").test(queryResult.query)) {
                     if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === insertAllowedFlag) {
@@ -408,9 +414,7 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                             queryResult.error = "Forbidden to do DELETE action"
                         } else {
                             if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT|(UPDATE|DELETE)\\s.+\\s?WHERE)" }), "si").test(queryResult.query)) {
-                                //dataManipulation
-                                //console.log(queryResult.query)
-                                queryResult.row = 8
+                                queryResult = await dataManipulation(id, queryResult)
                             } else {
                                 queryResult.error = "You need WHERE clause"
                             }
@@ -421,8 +425,6 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                 } else {
                     queryResult.error = "Abnormal Query"
                 }
-
-                console.log(queryResult)
 
                 if (
                     queryResultList.length > 0
@@ -437,8 +439,6 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                         )
                     )
                 ) {
-                    // console.log(queryResult)
-                    // console.log(queryResultList[queryResultList.length - 1].row + "::" + queryResult.row)
                     queryResultList[queryResultList.length - 1].row += queryResult.row
                 } else if (
                     new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(SELECT|WITH)" }), "si").test(queryResult.query) === false
@@ -449,76 +449,209 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
                     }
 
                     queryResultList.push(queryResult)
-                } else {
-                    console.log(queryResult)
                 }
             }
-        })
-
-        console.log(queryResultList.length)
-        if (queryResultList.length > 0) {
-            return ReturnHelper.dataResponse(queryResultList)
-        } else {
-            return ReturnHelper.failedResponse("gagag")
         }
 
-        // console.log(queryResultList)
-
-        // let match;
-        // let index = 0
-        // while ((match = regex.exec(query)) !== null) {
-        //     console.log(match[0])
-        //     index = match.index + match[0].length
-        //     console.log(index + match[0].length)
-        // }
-
-
-        // const externalDatabase = await prisma.externalDatabase.findUnique({
-        //     select: {
-        //         username: true,
-        //         password: true,
-        //         databaseConnection: true,
-        //         databaseType: {
-        //             select: {
-        //                 url: true
-        //             }
-        //         }
-        //     },
-        //     where: {
-        //         id: id,
-        //         deletedFlag: 0
-        //     }
-        // })
-
-        // if (externalDatabase !== null) {
-        //     // const postgresClient = new Client({
-        //     //     user: 'postgres',
-        //     //     host: 'localhost',
-        //     //     database: 'parung',
-        //     //     password: 'Password*123',
-        //     //     port: 5432,
-        //     // })
-
-        //     const postgresClient = new Client(
-        //         externalDatabase.databaseType.url
-        //             .replaceAll("%1$s", externalDatabase.username)
-        //             .replaceAll("%2$s", externalDatabase.password)
-        //             .replaceAll("%3$s", externalDatabase.databaseConnection!)
-        //     )
-
-        //     postgresClient.connect()
-        //         .then(async () => {
-        //             const result = await postgresClient.query('SELECT * FROM tbl_mt_http_method ')
-        //             // console.log(result)
-        //             console.log(result.fields[0].name)
-        //             console.log(result.fields[0].format)
-        //         })
-        //         .catch((err: any) => console.error('PostgreSQL connection error:', err.stack))
-        // }
-
-        // return ReturnHelper.dataResponse("hhaha")
+        if (queryResultList.length > 0) {
+            return ReturnHelper.dataResponse(queryResultList, [{ name: "Result Information" }])
+        } else {
+            return ReturnHelper.dataResponse(objectResult?.data!, objectResult?.header)
+        }
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+async function getDataSelection(id: number, query: string, page: number, limit: number) {
+    const externalDatabase = await prisma.externalDatabase.findUnique({
+        select: {
+            username: true,
+            password: true,
+            databaseConnection: true,
+            databaseType: {
+                select: {
+                    url: true
+                }
+            }
+        },
+        where: {
+            id: id,
+            deletedFlag: 0
+        }
+    })
+
+    if (externalDatabase !== null) {
+        // const postgresClient = new Client({
+        //     user: 'postgres',
+        //     host: 'localhost',
+        //     database: 'parung',
+        //     password: 'Password*123',
+        //     port: 5432,
+        // })
+
+        const postgresClient = new Client(
+            externalDatabase.databaseType.url
+                .replaceAll("%1$s", externalDatabase.username)
+                .replaceAll("%2$s", externalDatabase.password)
+                .replaceAll("%3$s", externalDatabase.databaseConnection!)
+        )
+
+        return await postgresClient.connect()
+            .then(async () => {
+                const result = await postgresClient.query(`${query} LIMIT ${page} OFFSET ${limit}`)
+                const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                let typeMap: { [key: number]: string } = {}
+                typeRes.rows.forEach(row => {
+                    {
+                        typeMap = {
+                            ...typeMap,
+                            [row.oid]: row.typname,
+                        }
+                    }
+                })
+
+                let header: {}[] = []
+                result.fields.forEach(field => {
+                    header.push({
+                        name: field.name,
+                        type: typeMap[field.dataTypeID]
+                    })
+                })
+
+                const queryManual = await prisma.queryManual.create({
+                    data: {
+                        id: CommonHelper.generateId(),
+                        externalDatabaseId: id,
+                        query: query,
+                        createdBy: "system",
+                        createdDate: DateHelper.getCurrentDateTime(),
+                        updatedBy: null,
+                        updatedDate: null,
+                        version: 0,
+                    }
+                })
+
+                return { header: header, data: [{ queryManualId: queryManual.id }] }
+            })
+            .catch((err: any) => {
+                return {
+                    header: [{ name: "Result Information" }],
+                    data: [{ error: err.message }]
+                }
+            })
+    }
+}
+
+async function dataDefinition(id: number, queryResult: CommonInterface.QueryResult) {
+    const externalDatabase = await prisma.externalDatabase.findUnique({
+        select: {
+            username: true,
+            password: true,
+            databaseConnection: true,
+            databaseType: {
+                select: {
+                    url: true
+                }
+            }
+        },
+        where: {
+            id: id,
+            deletedFlag: 0
+        }
+    })
+
+    if (externalDatabase !== null) {
+        const postgresClient = new Client(
+            externalDatabase.databaseType.url
+                .replaceAll("%1$s", externalDatabase.username)
+                .replaceAll("%2$s", externalDatabase.password)
+                .replaceAll("%3$s", externalDatabase.databaseConnection!)
+        )
+
+        return await postgresClient.connect()
+            .then(async () => {
+
+                queryResult.action = "defined"
+
+                if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "droped"
+                } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(CREATE)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "created"
+                } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(ALTER)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "altered"
+                }
+
+                await postgresClient.query(queryResult.query)
+                queryResult.row = 1
+                queryResult.error = null
+                return queryResult
+            })
+            .catch((err: any) => {
+                queryResult.row = 0
+                queryResult.error = err.message
+                return queryResult
+            })
+    } else {
+        queryResult.row = 0
+        queryResult.error = "Database not found"
+        return queryResult
+    }
+}
+
+async function dataManipulation(id: number, queryResult: CommonInterface.QueryResult) {
+    const externalDatabase = await prisma.externalDatabase.findUnique({
+        select: {
+            username: true,
+            password: true,
+            databaseConnection: true,
+            databaseType: {
+                select: {
+                    url: true
+                }
+            }
+        },
+        where: {
+            id: id,
+            deletedFlag: 0
+        }
+    })
+
+    if (externalDatabase !== null) {
+        const postgresClient = new Client(
+            externalDatabase.databaseType.url
+                .replaceAll("%1$s", externalDatabase.username)
+                .replaceAll("%2$s", externalDatabase.password)
+                .replaceAll("%3$s", externalDatabase.databaseConnection!)
+        )
+
+        return await postgresClient.connect()
+            .then(async () => {
+
+                queryResult.action = "modified"
+
+                if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "inserted"
+                } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(UPDATE)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "updated"
+                } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DELETE)" }), "si").test(queryResult.query)) {
+                    queryResult.action = "deleted"
+                }
+
+                const result = await postgresClient.query(queryResult.query)
+                queryResult.row = result.rowCount ?? 0
+                queryResult.error = null
+                return queryResult
+            })
+            .catch((err: any) => {
+                queryResult.row = 0
+                queryResult.error = err.message
+                return queryResult
+            })
+    } else {
+        queryResult.row = 0
+        queryResult.error = "Database not found"
+        return queryResult
     }
 }

@@ -190,8 +190,23 @@ model ExternalDatabase {
   updatedBy          String?            @map("updated_by") @db.VarChar(20)
   updatedDate        DateTime?          @map("dt_updated") @db.Timestamp(6)
   version            Int?               @default(0) @map("version") @db.SmallInt
+  queryManualList    QueryManual[]
 
   @@map("tbl_ext_database")
+}
+
+model QueryManual {
+  id                 BigInt           @id @map("id")
+  externalDatabaseId Int              @map("ext_database_id") @db.SmallInt
+  externalDatabase   ExternalDatabase @relation(fields: [externalDatabaseId], references: [id])
+  query              String           @map("query")
+  createdBy          String?          @map("created_by") @db.VarChar(20)
+  createdDate        DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy          String?          @map("updated_by") @db.VarChar(20)
+  updatedDate        DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version            Int?             @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_query_manual")
 }
 
 model MasterLanguage {

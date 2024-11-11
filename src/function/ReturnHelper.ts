@@ -15,10 +15,11 @@ export function pageResponse(count: number, data: object) {
     }
 }
 
-export function dataResponse(data: object) {
+export function dataResponse(data: object, header?: Array<{}>) {
     return {
-        data: data !== null ? CommonHelper.jsonParse(data) : null,
-        status: data !== null ? "success" : "failed"
+        data: CommonHelper.isDefined(data) ? CommonHelper.jsonParse(data) : null,
+        header: CommonHelper.isDefined(header) ? CommonHelper.jsonParse(header!) : null,
+        status: CommonHelper.isDefined(data) ? "success" : "failed"
     }
 }
 
