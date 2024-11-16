@@ -6,6 +6,7 @@ const Master = new Elysia({})
     .group("/master", app => app
         .use(BranchController)
         .get("/language.json", () => MasterFacade.getLanguage())
+        .get("/database-type.json", () => MasterFacade.getDatabaseType())
     )
 
 export default Master

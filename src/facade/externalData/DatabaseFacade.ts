@@ -11,7 +11,7 @@ import * as RegexConstants from "../../constants/RegexConstants"
 import * as CommonConstants from "../../constants/CommonConstants"
 import * as MasterConstants from "../../constants/MasterConstants"
 
-export async function get(request: any, query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static) {
     try {
         let condition = {}
 
@@ -25,13 +25,13 @@ export async function get(request: any, query: typeof CommonModel.TableModel.sta
                 ...condition,
                 OR: [
                     {
-                        name: {
+                        code: {
                             contains: unescape(query.search),
                             mode: 'insensitive'
                         }
                     },
                     {
-                        code: {
+                        databaseConnection: {
                             contains: unescape(query.search),
                             mode: 'insensitive'
                         }
@@ -45,9 +45,9 @@ export async function get(request: any, query: typeof CommonModel.TableModel.sta
             select: {
                 id: true,
                 code: true,
-                description: true,
                 databaseConnection: true,
                 lockedFlag: true,
+                createdDate: true
             },
             skip: query.start,
             take: query.length,
@@ -92,7 +92,7 @@ export async function getById(id: number) {
 
 export async function create(request: any, options: typeof ExternalModel.DatabaseModel.static) {
     try {
-        const currentId = await prisma.masterBranch.findFirst({ select: { id: true }, orderBy: { id: "desc" } })
+        const currentId = await prisma.externalDatabase.findFirst({ select: { id: true }, orderBy: { id: "desc" } })
 
         const externalDatabase = await prisma.externalDatabase.create({
             data: {
@@ -232,10 +232,10 @@ export async function testConnection(id: number) {
                     .replaceAll("%3$s", externalDatabase.databaseConnection!)
             )
 
-            postgresClient.connect()
+            return postgresClient.connect()
                 .then(() => {
                     postgresClient.end()
-                    ReturnHelper.successResponse("common.information.success")
+                    return ReturnHelper.successResponse("common.information.success")
                 })
                 .catch((e: any) => {
                     return ReturnHelper.failedResponse("common.information.timeout")
@@ -282,7 +282,7 @@ function getQueryResult(query: string) {
     return queryResult
 }
 
-export async function getQueryManualRun(id: number, bulkExecuted: number, query: string) {
+export async function runQueryManual(request: any, id: number, bulkExecuted: number, query: string) {
     try {
         // let selectAllowedFlag = CommonConstants.FLAG.NO
         // let dropAllowedFlag = CommonConstants.FLAG.NO
@@ -373,7 +373,7 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
         // query = "INSERT INTO tbl_temp VALUES (2, 'bb'), (3, 'cc'), (4, 'dd')"
         //query = "UPDATE tbl_temp SET nm = 'ee' WHERE id = 4"
         //query = "DELETE FROM tbl_temp WHERE id = 4"
-        query = "SELECT * FROM tbl_temp"
+        // query = "SELECT * FROM tbl_temp"
 
         let objectResult = null
 
@@ -464,6 +464,30 @@ export async function getQueryManualRun(id: number, bulkExecuted: number, query:
     }
 }
 
+export async function getQueryManual(request: any, queryManualId: number, start: number, length: number) {
+    try {
+        let objectResult = null
+        const queryManual = await prisma.queryManual.findUnique({
+            select: {
+                query: true,
+                externalDatabaseId: true,
+            },
+            where: {
+                id: queryManualId
+            }
+        })
+
+        if (queryManual !== null) {
+            return await getDataSelection(queryManual.externalDatabaseId, queryManual.query, start, length)
+        }
+
+        return ReturnHelper.failedResponse("common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
 async function getDataSelection(id: number, query: string, page: number, limit: number) {
     const externalDatabase = await prisma.externalDatabase.findUnique({
         select: {
@@ -500,45 +524,50 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
 
         return await postgresClient.connect()
             .then(async () => {
-                const result = await postgresClient.query(`${query} LIMIT ${page} OFFSET ${limit}`)
-                const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
-                let typeMap: { [key: number]: string } = {}
-                typeRes.rows.forEach(row => {
-                    {
-                        typeMap = {
-                            ...typeMap,
-                            [row.oid]: row.typname,
+                const result = await postgresClient.query(`${query} LIMIT ${limit} OFFSET ${page}`)
+                if (page === 0 && limit === 0) {
+                    const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                    let typeMap: { [key: number]: string } = {}
+                    typeRes.rows.forEach(row => {
+                        {
+                            typeMap = {
+                                ...typeMap,
+                                [row.oid]: row.typname,
+                            }
                         }
-                    }
-                })
-
-                let header: {}[] = []
-                result.fields.forEach(field => {
-                    header.push({
-                        name: field.name,
-                        type: typeMap[field.dataTypeID]
                     })
-                })
 
-                const queryManual = await prisma.queryManual.create({
-                    data: {
-                        id: CommonHelper.generateId(),
-                        externalDatabaseId: id,
-                        query: query,
-                        createdBy: "system",
-                        createdDate: DateHelper.getCurrentDateTime(),
-                        updatedBy: null,
-                        updatedDate: null,
-                        version: 0,
-                    }
-                })
+                    let header: {}[] = []
+                    result.fields.forEach(field => {
+                        header.push({
+                            name: field.name,
+                            type: typeMap[field.dataTypeID]
+                        })
+                    })
 
-                return { header: header, data: [{ queryManualId: queryManual.id }] }
+                    const queryManual = await prisma.queryManual.create({
+                        data: {
+                            id: CommonHelper.generateId(),
+                            externalDatabaseId: id,
+                            query: query,
+                            createdBy: "system",
+                            createdDate: DateHelper.getCurrentDateTime(),
+                            updatedBy: null,
+                            updatedDate: null,
+                            version: 0,
+                        }
+                    })
+
+                    return { header: header, data: [{ queryManualId: queryManual.id }] }
+                } else {
+                    const count = await postgresClient.query(query)
+                    return ReturnHelper.pageResponse(count.rowCount ?? 0, result.rows)
+                }
             })
             .catch((err: any) => {
                 return {
                     header: [{ name: "Result Information" }],
-                    data: [{ error: err.message }]
+                    data: [{ error: `ERROR : ${err.message}` }]
                 }
             })
     }
@@ -590,7 +619,7 @@ async function dataDefinition(id: number, queryResult: CommonInterface.QueryResu
             })
             .catch((err: any) => {
                 queryResult.row = 0
-                queryResult.error = err.message
+                queryResult.error = `ERROR : ${err.message}`
                 return queryResult
             })
     } else {
@@ -646,7 +675,7 @@ async function dataManipulation(id: number, queryResult: CommonInterface.QueryRe
             })
             .catch((err: any) => {
                 queryResult.row = 0
-                queryResult.error = err.message
+                queryResult.error = `ERROR : ${err.message}`
                 return queryResult
             })
     } else {

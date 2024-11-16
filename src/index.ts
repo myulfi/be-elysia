@@ -7,6 +7,7 @@ import { generateToken } from "./controller/JsonWebTokenController"
 import prisma from "../prisma/client"
 import Main from "./routers/main"
 import Master from "./routers/master"
+import External from "./routers/external"
 import Command from "./routers/command"
 import Test from "./routers/test"
 
@@ -91,6 +92,7 @@ const app = new Elysia()
             app
                 .use(Main)
                 .use(Master)
+                .use(External)
                 .use(Command)
                 .use(Test)
     )

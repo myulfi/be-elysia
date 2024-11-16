@@ -26,3 +26,9 @@ export const DatabaseModel = t.Object({
         default: 0,
     })
 })
+
+export const DatabaseQueryString = t.Object({
+    query: t.String({
+        minLength: 1,
+    })
+})
