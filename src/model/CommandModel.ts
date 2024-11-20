@@ -2,15 +2,15 @@ import { t } from 'elysia'
 
 export const LanguageModel = t.Object({
     screenCode: t.String({
-        minLength: 3,
+        minLength: 1,
         maxLength: 100,
     }),
     labelType: t.String({
-        minLength: 3,
+        minLength: 1,
         maxLength: 100,
     }),
     keyCode: t.String({
-        minLength: 3,
+        minLength: 1,
         maxLength: 100,
     }),
     languageValueList: t.Array(

@@ -65,5 +65,66 @@ const DatabaseController = new Elysia({})
             })
         }
     )
+    .get(
+        "/:id/:externalDatabaseQueryTypeId/:content/insert/:includeColumnNameFlag/:numberOfLinePerAction/database-query-sql.json",
+        ({ params: { id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction } }) => DatabaseFacade.getQueryInsertSql(id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction),
+        {
+            params: t.Object({
+                id: t.Number(),
+                externalDatabaseQueryTypeId: t.Number(),
+                content: t.String(),
+                includeColumnNameFlag: t.Number(),
+                numberOfLinePerAction: t.Number(),
+            })
+        }
+    )
+    .get(
+        "/:id/:externalDatabaseQueryTypeId/:content/update/:multipleLineFlag/:firstAmountConditioned/database-query-sql.json",
+        ({ params: { id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned } }) => DatabaseFacade.getQueryUpdateSql(id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned),
+        {
+            params: t.Object({
+                id: t.Number(),
+                externalDatabaseQueryTypeId: t.Number(),
+                content: t.String(),
+                multipleLineFlag: t.Number(),
+                firstAmountConditioned: t.Number(),
+            })
+        }
+    )
+    .get(
+        "/:id/:externalDatabaseQueryTypeId/:content/:headerFlag/:delimiter/database-query-csv.json",
+        ({ params: { id, externalDatabaseQueryTypeId, content, headerFlag, delimiter } }) => DatabaseFacade.getQueryCsv(id, externalDatabaseQueryTypeId, content, headerFlag, delimiter),
+        {
+            params: t.Object({
+                id: t.Number(),
+                externalDatabaseQueryTypeId: t.Number(),
+                content: t.String(),
+                headerFlag: t.Number(),
+                delimiter: t.String(),
+            })
+        }
+    )
+    .get(
+        "/:id/:externalDatabaseQueryTypeId/:content/database-query-json.json",
+        ({ params: { id, externalDatabaseQueryTypeId, content } }) => DatabaseFacade.getQueryJson(id, externalDatabaseQueryTypeId, content),
+        {
+            params: t.Object({
+                id: t.Number(),
+                externalDatabaseQueryTypeId: t.Number(),
+                content: t.String(),
+            })
+        }
+    )
+    .get(
+        "/:id/:externalDatabaseQueryTypeId/:content/database-query-xml.json",
+        ({ params: { id, externalDatabaseQueryTypeId, content } }) => DatabaseFacade.getQueryXml(id, externalDatabaseQueryTypeId, content),
+        {
+            params: t.Object({
+                id: t.Number(),
+                externalDatabaseQueryTypeId: t.Number(),
+                content: t.String(),
+            })
+        }
+    )
 
 export default DatabaseController

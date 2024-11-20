@@ -15,10 +15,9 @@ export function pageResponse(count: number, data: object) {
     }
 }
 
-export function dataResponse(data: object, header?: Array<{}>) {
+export function dataResponse(data: object) {
     return {
         data: CommonHelper.isDefined(data) ? CommonHelper.jsonParse(data) : null,
-        header: CommonHelper.isDefined(header) ? CommonHelper.jsonParse(header!) : null,
         status: CommonHelper.isDefined(data) ? "success" : "failed"
     }
 }

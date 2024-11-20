@@ -385,13 +385,10 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
             if (element[0].length > 1) {
                 queryResult = getQueryResult(element[0])
 
-                if (
-                    queryResultList.length === 0
-                    && new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(SELECT|WITH)" }), "si").test(queryResult.query)
-                ) {
+                if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(SELECT|WITH)" }), "si").test(queryResult.query)) {
                     if (CommonConstants.FLAG.NO === selectAllowedFlag) {
                         queryResult.error = "Forbidden to do SELECT action"
-                    } else {
+                    } else if (queryResultList.length === 0) {
                         objectResult = await getDataSelection(id, queryResult.query, 0, 0)
                     }
                 } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP|CREATE|ALTER)" }), "si").test(queryResult.query)) {
@@ -454,9 +451,11 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
         }
 
         if (queryResultList.length > 0) {
-            return ReturnHelper.dataResponse(queryResultList, [{ name: "Result Information" }])
+            return ReturnHelper.dataResponse({ result: queryResultList, header: [{ name: "Result Information" }] })
+        } else if (objectResult?.data.length === 1 && objectResult?.data[0].error !== undefined) {
+            return ReturnHelper.dataResponse({ result: [{ error: objectResult?.data[0].error }], header: [{ name: "Result Information" }] })
         } else {
-            return ReturnHelper.dataResponse(objectResult?.data!, objectResult?.header)
+            return ReturnHelper.dataResponse(objectResult?.data!)
         }
     } catch (e: unknown) {
         console.log(e)
@@ -558,7 +557,7 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
                         }
                     })
 
-                    return { header: header, data: [{ queryManualId: queryManual.id }] }
+                    return { data: { queryManualId: queryManual.id, header: header } }
                 } else {
                     const count = await postgresClient.query(query)
                     return ReturnHelper.pageResponse(count.rowCount ?? 0, result.rows)
@@ -682,5 +681,473 @@ async function dataManipulation(id: number, queryResult: CommonInterface.QueryRe
         queryResult.row = 0
         queryResult.error = "Database not found"
         return queryResult
+    }
+}
+
+function getTableName(query: string) {
+    const nameArray = [...query.matchAll(new RegExp("FROM (\\w+)", "gmi"))];
+    return nameArray.length > 0 && nameArray[0].length > 0 && nameArray[0][0].toLowerCase().startsWith("from ") ? nameArray[0][0].substr(5).trim() : "manual";
+}
+
+export async function getQueryInsertSql(id: number, externalDatabaseQueryTypeId: number, content: string, includeColumnNameFlag: number, numberOfLinePerAction: number) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+
+        if (externalDatabase !== null) {
+            const postgresClient = new Client(
+                externalDatabase.databaseType.url
+                    .replaceAll("%1$s", externalDatabase.username)
+                    .replaceAll("%2$s", externalDatabase.password)
+                    .replaceAll("%3$s", externalDatabase.databaseConnection!)
+            )
+
+            return await postgresClient.connect()
+                .then(async () => {
+                    const queryManual = await prisma.queryManual.findUnique({
+                        select: {
+                            query: true,
+                        },
+                        where: { id: Number(content) }
+                    })
+
+                    if (queryManual !== null) {
+                        const result = await postgresClient.query(queryManual.query)
+                        const name = getTableName(queryManual.query)
+
+                        const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                        let typeMap: { [key: number]: string } = {}
+                        typeRes.rows.forEach(row => {
+                            {
+                                typeMap = {
+                                    ...typeMap,
+                                    [row.oid]: row.typname,
+                                }
+                            }
+                        })
+
+                        let header: { name: string, type: string }[] = []
+                        result.fields.forEach(field => {
+                            header.push({
+                                name: field.name,
+                                type: typeMap[field.dataTypeID]
+                            })
+                        })
+
+                        const columnName = header.map(obj => obj.name).join(", ")
+
+                        const content: string[] = []
+                        result.rows.forEach((row, index) => {
+                            const value = header.reduce(
+                                (prev, head) => `${prev}${prev.length > 0 ? ", " : ""}${row[head.name] === null ? "NULL" : head.type.includes("int") ? row[head.name] : head.type.includes("date") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd") + "'" : head.type.includes("timestamp") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd HH:mm:ss") + "'" : "'" + row[head.name] + "'"}`,
+                                ""
+                            )
+
+                            if (numberOfLinePerAction === 1) {
+                                if (CommonConstants.FLAG.YES === includeColumnNameFlag) {
+                                    content.push(`INSERT INTO ${name} (${columnName}) VALUES (${value});`)
+                                } else {
+                                    content.push(`INSERT INTO ${name} VALUES (${value});`)
+                                }
+                            } else {
+                                if (index % numberOfLinePerAction === 0) {
+                                    if (CommonConstants.FLAG.YES === includeColumnNameFlag) {
+                                        content.push(`INSERT INTO ${name} (${columnName}) VALUES (${value})`)
+                                    } else {
+                                        content.push(`INSERT INTO ${name} VALUES (${value})`)
+                                    }
+                                } else {
+                                    content.push(`, (${value})${index % numberOfLinePerAction === numberOfLinePerAction - 1 ? ";" : ""}`)
+                                }
+                            }
+                        })
+
+                        if (content[content.length - 1].endsWith(";") === false) {
+                            content[content.length - 1] = content[content.length - 1].concat(";")
+                        }
+
+                        content.push("")
+                        content.push(`/*Generated by ${Bun.env.APP_NAME} at ${DateHelper.formatDate(DateHelper.getCurrentDateTime(), "dd MMM yyyy HH:mm:ss")}*/`)
+
+                        return {
+                            data: content.join("\r\n").trim(),
+                            status: "success"
+                        }
+                    } else {
+                        return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.log(e)
+                    return ReturnHelper.failedResponse("common.information.failed")
+                })
+        } else {
+            return ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryUpdateSql(id: number, externalDatabaseQueryTypeId: number, content: string, multipleLineFlag: number, firstAmountConditioned: number) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+
+        if (externalDatabase !== null) {
+            const postgresClient = new Client(
+                externalDatabase.databaseType.url
+                    .replaceAll("%1$s", externalDatabase.username)
+                    .replaceAll("%2$s", externalDatabase.password)
+                    .replaceAll("%3$s", externalDatabase.databaseConnection!)
+            )
+
+            return await postgresClient.connect()
+                .then(async () => {
+                    const queryManual = await prisma.queryManual.findUnique({
+                        select: {
+                            query: true,
+                        },
+                        where: { id: Number(content) }
+                    })
+
+                    if (queryManual !== null) {
+                        const result = await postgresClient.query(queryManual.query)
+                        const name = getTableName(queryManual.query)
+
+                        const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                        let typeMap: { [key: number]: string } = {}
+                        typeRes.rows.forEach(row => {
+                            {
+                                typeMap = {
+                                    ...typeMap,
+                                    [row.oid]: row.typname,
+                                }
+                            }
+                        })
+
+                        let header: { name: string, type: string }[] = []
+                        result.fields.forEach(field => {
+                            header.push({
+                                name: field.name,
+                                type: typeMap[field.dataTypeID]
+                            })
+                        })
+
+                        const content: string[] = []
+                        result.rows.forEach((row) => {
+                            const set = header.reduce(
+                                (prev, head) => `${prev}${CommonConstants.FLAG.YES === multipleLineFlag ? "\r\n" : ""}${prev.length > 0 ? ", " : ""}${head.name} = ${row[head.name] === null ? "NULL" : head.type.includes("int") ? row[head.name] : head.type.includes("date") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd") + "'" : head.type.includes("timestamp") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd HH:mm:ss") + "'" : "'" + row[head.name] + "'"}`,
+                                ""
+                            )
+
+                            const condition = header.reduce(
+                                (prev, head, index) => {
+                                    if (index < firstAmountConditioned) {
+                                        return `${prev}${prev.length > 0 ? " AND " : ""}${head.name} = ${row[head.name] === null ? "NULL" : head.type.includes("int") ? row[head.name] : head.type.includes("date") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd") + "'" : head.type.includes("timestamp") ? "'" + DateHelper.formatDate(row[head.name], "yyyy-MM-dd HH:mm:ss") + "'" : "'" + row[head.name] + "'"}`
+                                    } else {
+                                        return prev
+                                    }
+                                },
+                                ""
+                            )
+
+                            content.push(`${CommonConstants.FLAG.YES === multipleLineFlag ? "\r\n" : ""}UPDATE ${name} SET ${set}${CommonConstants.FLAG.YES === multipleLineFlag ? "\r\n" : " "}WHERE ${condition};`)
+                        })
+
+                        content.push("")
+                        content.push(`/*Generated by ${Bun.env.APP_NAME} at ${DateHelper.formatDate(DateHelper.getCurrentDateTime(), "dd MMM yyyy HH:mm:ss")}*/`)
+
+                        return {
+                            data: content.join("\r\n").trim(),
+                            status: "success"
+                        }
+                    } else {
+                        return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.log(e)
+                    return ReturnHelper.failedResponse("common.information.failed")
+                })
+        } else {
+            return ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryCsv(id: number, externalDatabaseQueryTypeId: number, content: string, headerFlag: number, delimiter: string) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+
+        if (externalDatabase !== null) {
+            const postgresClient = new Client(
+                externalDatabase.databaseType.url
+                    .replaceAll("%1$s", externalDatabase.username)
+                    .replaceAll("%2$s", externalDatabase.password)
+                    .replaceAll("%3$s", externalDatabase.databaseConnection!)
+            )
+
+            return await postgresClient.connect()
+                .then(async () => {
+                    const queryManual = await prisma.queryManual.findUnique({
+                        select: {
+                            query: true,
+                        },
+                        where: { id: Number(content) }
+                    })
+
+                    if (queryManual !== null) {
+                        const result = await postgresClient.query(queryManual.query)
+
+                        const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                        let typeMap: { [key: number]: string } = {}
+                        typeRes.rows.forEach(row => {
+                            {
+                                typeMap = {
+                                    ...typeMap,
+                                    [row.oid]: row.typname,
+                                }
+                            }
+                        })
+
+                        let header: { name: string, type: string }[] = []
+                        result.fields.forEach(field => {
+                            header.push({
+                                name: field.name,
+                                type: typeMap[field.dataTypeID]
+                            })
+                        })
+
+                        const content: string[] = []
+                        if (CommonConstants.FLAG.YES === headerFlag) {
+                            content.push(header.map(obj => obj.name).join(unescape(delimiter)))
+                        }
+
+                        result.rows.forEach((row) => {
+                            content.push(
+                                header.reduce(
+                                    (prev, head) => `${prev}${prev.length > 0 ? unescape(delimiter) : ""}${row[head.name] === null ? "NULL" : head.type.includes("int") ? row[head.name] : head.type.includes("date") ? DateHelper.formatDate(row[head.name], "yyyy-MM-dd") : head.type.includes("timestamp") ? DateHelper.formatDate(row[head.name], "yyyy-MM-dd HH:mm:ss") : row[head.name]}`,
+                                    ""
+                                )
+                            )
+                        })
+
+                        return {
+                            data: content.join("\r\n").trim(),
+                            status: "success"
+                        }
+                    } else {
+                        return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.log(e)
+                    return ReturnHelper.failedResponse("common.information.failed")
+                })
+        } else {
+            return ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryJson(id: number, externalDatabaseQueryTypeId: number, content: string) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+
+        if (externalDatabase !== null) {
+            const postgresClient = new Client(
+                externalDatabase.databaseType.url
+                    .replaceAll("%1$s", externalDatabase.username)
+                    .replaceAll("%2$s", externalDatabase.password)
+                    .replaceAll("%3$s", externalDatabase.databaseConnection!)
+            )
+
+            return await postgresClient.connect()
+                .then(async () => {
+                    const queryManual = await prisma.queryManual.findUnique({
+                        select: {
+                            query: true,
+                        },
+                        where: { id: Number(content) }
+                    })
+
+                    if (queryManual !== null) {
+                        const result = await postgresClient.query(queryManual.query)
+
+                        return {
+                            data: JSON.stringify(result.rows).toString(),
+                            status: "success"
+                        }
+                    } else {
+                        return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.log(e)
+                    return ReturnHelper.failedResponse("common.information.failed")
+                })
+        } else {
+            return ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryXml(id: number, externalDatabaseQueryTypeId: number, content: string) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+
+        if (externalDatabase !== null) {
+            const postgresClient = new Client(
+                externalDatabase.databaseType.url
+                    .replaceAll("%1$s", externalDatabase.username)
+                    .replaceAll("%2$s", externalDatabase.password)
+                    .replaceAll("%3$s", externalDatabase.databaseConnection!)
+            )
+
+            return await postgresClient.connect()
+                .then(async () => {
+                    const queryManual = await prisma.queryManual.findUnique({
+                        select: {
+                            query: true,
+                        },
+                        where: { id: Number(content) }
+                    })
+
+                    if (queryManual !== null) {
+                        const result = await postgresClient.query(queryManual.query)
+                        const name = getTableName(queryManual.query)
+
+                        const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
+                        let typeMap: { [key: number]: string } = {}
+                        typeRes.rows.forEach(row => {
+                            {
+                                typeMap = {
+                                    ...typeMap,
+                                    [row.oid]: row.typname,
+                                }
+                            }
+                        })
+
+                        let header: { name: string, type: string }[] = []
+                        result.fields.forEach(field => {
+                            header.push({
+                                name: field.name,
+                                type: typeMap[field.dataTypeID]
+                            })
+                        })
+
+                        const content: string[] = []
+                        content.push("<List>")
+
+                        result.rows.forEach((row) => {
+                            content.push(`<${name}>`)
+                            header.forEach((head) => {
+                                content.push(`<${head.name}>${row[head.name] === null ? "NULL" : head.type.includes("int") ? row[head.name] : head.type.includes("date") ? DateHelper.formatDate(row[head.name], "yyyy-MM-dd") : head.type.includes("timestamp") ? DateHelper.formatDate(row[head.name], "yyyy-MM-dd HH:mm:ss") : row[head.name]}</${head.name}>`)
+                            })
+                            content.push(`</${name}>`)
+                        })
+
+                        return {
+                            data: content.join("").trim(),
+                            status: "success"
+                        }
+                    } else {
+                        return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.log(e)
+                    return ReturnHelper.failedResponse("common.information.failed")
+                })
+        } else {
+            return ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
     }
 }

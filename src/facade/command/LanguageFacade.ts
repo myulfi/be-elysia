@@ -15,25 +15,19 @@ export async function get(query: typeof CommonModel.TableModel.static) {
             deletedFlag: 0,
         }
 
-        // if (query.search.length > 0) {
-        //     condition = {
-        //         ...condition,
-        //         OR: [
-        //             {
-        //                 name: {
-        //                     contains: unescape(query.search),
-        //                     mode: 'insensitive'
-        //                 }
-        //             },
-        //             {
-        //                 description: {
-        //                     contains: unescape(query.search),
-        //                     mode: 'insensitive'
-        //                 }
-        //             }
-        //         ]
-        //     }
-        // }
+        if (query.search.length > 0) {
+            condition = {
+                ...condition,
+                OR: [
+                    {
+                        keyCode: {
+                            contains: unescape(query.search),
+                            mode: 'insensitive'
+                        }
+                    }
+                ]
+            }
+        }
 
         const count = await prisma.masterLanguageKey.count({ where: condition })
         const languageList = await prisma.masterLanguageKey.findMany({
