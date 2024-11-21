@@ -126,5 +126,13 @@ const DatabaseController = new Elysia({})
             })
         }
     )
+    .get(
+        '/:id/query-object-database.json',
+        ({ params: { id }, query }) => DatabaseFacade.getQueryObject(id, query),
+        {
+            params: CommonModel.IntegerIdModel,
+            query: CommonModel.TableModel
+        }
+    )
 
 export default DatabaseController
