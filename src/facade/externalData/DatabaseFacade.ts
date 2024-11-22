@@ -1,5 +1,7 @@
-import { Client } from "pg"
+import { Client, Pool } from "pg"
+import tunnelSsh from "tunnel-ssh"
 import prisma from "../../../prisma/client"
+import fs from "fs"
 import * as CommonInterface from "../../interface/CommonInterface"
 import * as CommonModel from "../../model/CommonModel"
 import * as ExternalModel from "../../model/ExternalModel"
@@ -44,6 +46,7 @@ export async function get(query: typeof CommonModel.TableModel.static) {
                 id: true,
                 code: true,
                 databaseConnection: true,
+                description: true,
                 lockedFlag: true,
                 createdDate: true
             },
@@ -242,10 +245,130 @@ async function getPostgresqlConnection(id: number, func: Function, errorfunc?: F
                 await postgresClient.connect()
                 response = await func(postgresClient)
             } catch (e) {
-                response = errorfunc !== undefined ? errorfunc(e) : ReturnHelper.failedResponse("common.information.timeout")
+                response = errorfunc !== undefined ? errorfunc(e) : ReturnHelper.failedResponse(String(e))
             } finally {
                 await postgresClient.end()
             }
+        } else {
+            response = ReturnHelper.failedResponse("common.information.databaseNotfounded")
+        }
+
+        return response
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+async function getPostgresqlConnection2(id: number, func: Function, errorfunc?: Function) {
+    try {
+        const externalDatabase = await prisma.externalDatabase.findUnique({
+            select: {
+                username: true,
+                password: true,
+                databaseConnection: true,
+                databaseType: {
+                    select: {
+                        url: true
+                    }
+                }
+            },
+            where: {
+                id: id,
+                deletedFlag: 0
+            }
+        })
+        let response: any = null
+        if (externalDatabase !== null) {
+            // const postgresClient = new Client({
+            //     user: 'postgres',
+            //     host: 'localhost',
+            //     database: 'parung',
+            //     password: 'Password*123',
+            //     port: 5432,
+            // })
+
+            let localPort = 5433
+            // tunnelOptions, serverOptions, sshOptions, forwardOptions
+            const [server, client] = await tunnelSsh.createTunnel(
+                // { autoClose: true },
+                { autoClose: false },
+                { port: localPort },
+                {
+                    // host: '103.118.99.182',
+                    // port: 2222,
+                    // username: 'USER',
+                    // password: 'SiAnuKiperLazio123',
+
+                    host: '108.136.248.143',
+                    port: 22,
+                    username: 'ubuntu',
+                    // password: 'SiAnuKiperLazio123',
+                    privateKey: fs.readFileSync('C:\\Users\\Mulyadi Yulfi\\.ssh\\sippuri.pem', "utf8"),
+
+                    // agent: 'pageant',
+                    // keepaliveInterval: 1000,
+                    // readyTimeout: 10000,
+                    keepAlive: true,
+                },
+                {
+                    // srcAddr: 'localhost',
+                    // srcPort: localPort,
+                    // dstAddr: 'localhost',
+                    // dstPort: localPort,
+                    dstPort: 5432
+                }
+            ).then(async ([server, conn]) => {
+                const postgresClient = new Pool(
+                    {
+                        // user: 'postgres',        // Your username
+                        // host: 'localhost',       // Your database host
+                        // database: 'dukcapil',  // Your database name
+                        // password: '243ujuUJ39Jhg',  // Your password
+                        // port: localPort,              // Default PostgreSQL port
+                        user: 'postgres',        // Your username
+                        host: 'localhost',       // Your database host
+                        database: 'sippuri',  // Your database name
+                        password: 'j660ATrA1to8',  // Your password
+                        port: 5433,
+                    }
+                    // externalDatabase.databaseType.url
+                    //     .replaceAll("%1$s", externalDatabase.username)
+                    //     .replaceAll("%2$s", externalDatabase.password)
+                    //     .replaceAll("%3$s", externalDatabase.databaseConnection!)
+                )
+                try {
+                    console.log("test22")
+                    const result = await postgresClient.query("select * from tbl_mt")
+                    console.log(result)
+                    //await postgresClient.connect()
+                    console.log("test23")
+                    response = await func(postgresClient)
+                } catch (e) {
+                    console.log("test4")
+                    console.log(e)
+                    response = errorfunc !== undefined ? errorfunc(e) : ReturnHelper.failedResponse("common.information.timeout")
+                } finally {
+                    await postgresClient.end()
+                    server.close()
+                }
+
+                return [server, conn];
+            });
+
+            console.log("test2")
+            // console.log(server?.listening)
+            // console.log(externalDatabase.databaseType.url
+            //     .replaceAll("%1$s", externalDatabase.username)
+            //     .replaceAll("%2$s", externalDatabase.password)
+            //     .replaceAll("%3$s", externalDatabase.databaseConnection!))
+
+            //server?
+            // .listen({
+
+            console.log(`server listen on ${server?.address()?.port}`)
+
+
         } else {
             response = ReturnHelper.failedResponse("common.information.databaseNotfounded")
         }
@@ -494,6 +617,25 @@ export async function getQueryManual(request: any, queryManualId: number, start:
         }
 
         return ReturnHelper.failedResponse("common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function runQueryObjectData(request: any, id: number, objectName: string) {
+    try {
+        const objectResult = await getDataSelection(id, `SELECT * FROM ${objectName}`, 0, 0)
+        return ReturnHelper.dataResponse(objectResult?.data!)
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryObjectData(request: any, id: number, objectName: string, start: number, length: number) {
+    try {
+        return await getDataSelection(id, `SELECT * FROM ${objectName}`, start, length)
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")

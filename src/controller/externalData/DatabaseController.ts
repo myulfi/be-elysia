@@ -65,6 +65,30 @@ const DatabaseController = new Elysia({})
             })
         }
     )
+    .patch(
+        '/:id/:objectName/query-object-data-database.json',
+        ({ request, params: { id, objectName } }) => DatabaseFacade.runQueryObjectData(request, id, objectName),
+        {
+            params: t.Object({
+                id: t.Numeric(),
+                objectName: t.String(),
+            }),
+        }
+    )
+    .get(
+        '/:id/:externalDatabaseQueryTypeId/query-object-data-database.json',
+        ({ request, params: { id, externalDatabaseQueryTypeId }, query: { start, length } }) => DatabaseFacade.getQueryObjectData(request, id, externalDatabaseQueryTypeId, start, length),
+        {
+            params: t.Object({
+                id: t.Numeric(),
+                externalDatabaseQueryTypeId: t.String(),
+            }),
+            query: t.Object({
+                start: t.Number(),
+                length: t.Number(),
+            })
+        }
+    )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/insert/:includeColumnNameFlag/:numberOfLinePerAction/database-query-sql.json",
         ({ params: { id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction } }) => DatabaseFacade.getQueryInsertSql(id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction),
