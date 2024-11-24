@@ -175,24 +175,41 @@ model MasterDatabaseType {
 }
 
 model ExternalDatabase {
-  id                 Int                @id @map("id") @db.SmallInt
-  code               String             @map("cd") @db.VarChar(20)
-  description        String?            @map("dscp") @db.VarChar(800)
-  databaseTypeId     Int                @map("mt_database_type_id") @db.SmallInt
-  databaseType       MasterDatabaseType @relation(fields: [databaseTypeId], references: [id])
-  username           String             @map("username") @db.VarChar(200)
-  password           String             @map("password") @db.VarChar(200)
-  databaseConnection String?            @map("db_connection") @db.VarChar(350)
-  lockedFlag         Int?               @default(1) @map("is_lock") @db.SmallInt
-  deletedFlag        Int?               @default(0) @map("is_del") @db.SmallInt
-  createdBy          String?            @map("created_by") @db.VarChar(20)
-  createdDate        DateTime?          @map("dt_created") @db.Timestamp(6)
-  updatedBy          String?            @map("updated_by") @db.VarChar(20)
-  updatedDate        DateTime?          @map("dt_updated") @db.Timestamp(6)
-  version            Int?               @default(0) @map("version") @db.SmallInt
-  queryManualList    QueryManual[]
+  id                        Int                     @id @map("id") @db.SmallInt
+  code                      String                  @map("cd") @db.VarChar(20)
+  description               String?                 @map("dscp") @db.VarChar(800)
+  databaseTypeId            Int                     @map("mt_database_type_id") @db.SmallInt
+  databaseType              MasterDatabaseType      @relation(fields: [databaseTypeId], references: [id])
+  username                  String                  @map("username") @db.VarChar(200)
+  password                  String                  @map("password") @db.VarChar(200)
+  databaseConnection        String?                 @map("db_connection") @db.VarChar(350)
+  lockedFlag                Int?                    @default(1) @map("is_lock") @db.SmallInt
+  deletedFlag               Int?                    @default(0) @map("is_del") @db.SmallInt
+  createdBy                 String?                 @map("created_by") @db.VarChar(20)
+  createdDate               DateTime?               @map("dt_created") @db.Timestamp(6)
+  updatedBy                 String?                 @map("updated_by") @db.VarChar(20)
+  updatedDate               DateTime?               @map("dt_updated") @db.Timestamp(6)
+  version                   Int?                    @default(0) @map("version") @db.SmallInt
+  queryManualList           QueryManual[]
+  externalDatabaseQueryList ExternalDatabaseQuery[]
 
   @@map("tbl_ext_database")
+}
+
+model ExternalDatabaseQuery {
+  id                 BigInt           @id @map("id")
+  description        String?          @map("dscp") @db.VarChar(800)
+  query              String           @map("query")
+  externalDatabaseId Int              @map("ext_database_id") @db.SmallInt
+  externalDatabase   ExternalDatabase @relation(fields: [externalDatabaseId], references: [id])
+  deletedFlag        Int?             @default(0) @map("is_del") @db.SmallInt
+  createdBy          String?          @map("created_by") @db.VarChar(20)
+  createdDate        DateTime?        @map("dt_created") @db.Timestamp(6)
+  updatedBy          String?          @map("updated_by") @db.VarChar(20)
+  updatedDate        DateTime?        @map("dt_updated") @db.Timestamp(6)
+  version            Int?             @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_ext_database_query")
 }
 
 model QueryManual {

@@ -623,19 +623,222 @@ export async function getQueryManual(request: any, queryManualId: number, start:
     }
 }
 
-export async function runQueryObjectData(request: any, id: number, objectName: string) {
+export async function getQueryObject(id: number, query: typeof CommonModel.TableModel.static) {
+    const data = await getPostgresqlConnection(
+        id,
+        async (postgresClient: Client) => {
+            const order = `${query.orderColumn} ${query.orderDir}`
+            const condition = query.search.length > 0 ? `AND object_name LIKE \'%${unescape(query.search)}%\'` : ""
+            const queryScript = `
+                SELECT
+					objects.object_id
+					, objects.object_name
+					, objects.object_type
+				 FROM (
+					SELECT
+						pg_class.oid AS object_id
+						, views.viewname AS object_name
+						, 'view' AS object_type
+					FROM pg_catalog.pg_views views
+					LEFT JOIN pg_class ON pg_class.relname = views.viewname
+					WHERE views.schemaname = 'public'
+					UNION ALL
+					SELECT
+						pg_class.oid AS object_id
+						, tables.tablename AS object_name
+						, 'table' AS object_type
+					FROM pg_catalog.pg_tables tables
+					LEFT JOIN pg_class ON pg_class.relname = tables.tablename
+					WHERE tables.schemaname = 'public'
+					UNION ALL
+					SELECT
+						functions.pronamespace AS object_id
+						, functions.proname AS object_name
+						, 'function' AS object_type
+					FROM pg_catalog.pg_proc functions
+					WHERE functions.pronamespace IN(SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = 'public')
+				 ) objects
+				 WHERE 1 = 1
+				 ${condition}
+            `
+
+            const count = await postgresClient.query(`SELECT COUNT(*) FROM (${queryScript})`)
+            const result = await postgresClient.query(queryScript.concat(` ORDER BY ${order} LIMIT ${query.length} OFFSET ${query.start}`))
+
+            return ReturnHelper.pageResponse(count.rows[0].count, result.rows)
+        },
+        (err: any) => {
+            return {
+                header: [{ name: "Result Information" }],
+                data: [{ error: `ERROR : ${err.message}` }]
+            }
+        }
+    )
+
+    return data
+
+    /*
     try {
-        const objectResult = await getDataSelection(id, `SELECT * FROM ${objectName}`, 0, 0)
-        return ReturnHelper.dataResponse(objectResult?.data!)
+        let condition = {}
+
+        condition = {
+            ...condition,
+            deletedFlag: 0,
+        }
+
+        if (query.search.length > 0) {
+            condition = {
+                ...condition,
+                OR: [
+                    {
+                        code: {
+                            contains: unescape(query.search),
+                            mode: 'insensitive'
+                        }
+                    },
+                    {
+                        databaseConnection: {
+                            contains: unescape(query.search),
+                            mode: 'insensitive'
+                        }
+                    }
+                ]
+            }
+        }
+
+        const count = await prisma.externalDatabase.count({ where: condition })
+        const externalDatabaseList = await prisma.externalDatabase.findMany({
+            select: {
+                id: true,
+                code: true,
+                databaseConnection: true,
+                lockedFlag: true,
+                createdDate: true
+            },
+            skip: query.start,
+            take: query.length,
+            where: condition,
+            orderBy: { [query.orderColumn]: query.orderDir }
+        })
+
+        return ReturnHelper.pageResponse(count, externalDatabaseList)
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+        */
+}
+
+export async function getQueryWhitelist(id: number, query: typeof CommonModel.TableModel.static) {
+    try {
+        let condition = {}
+
+        condition = {
+            ...condition,
+            deletedFlag: 0,
+            externalDatabaseId: id,
+        }
+
+        if (query.search.length > 0) {
+            condition = {
+                ...condition,
+                OR: [
+                    {
+                        description: {
+                            contains: unescape(query.search),
+                            mode: 'insensitive'
+                        }
+                    },
+                    {
+                        query: {
+                            contains: unescape(query.search),
+                            mode: 'insensitive'
+                        }
+                    }
+                ]
+            }
+        }
+
+        const count = await prisma.externalDatabaseQuery.count({ where: condition })
+        const externalDatabaseQueryList = await prisma.externalDatabaseQuery.findMany({
+            select: {
+                id: true,
+                description: true,
+                query: true,
+                createdDate: true
+            },
+            skip: query.start,
+            take: query.length,
+            where: condition,
+            orderBy: { [query.orderColumn]: query.orderDir }
+        })
+
+        return ReturnHelper.pageResponse(count, externalDatabaseQueryList)
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
     }
 }
 
-export async function getQueryObjectData(request: any, id: number, objectName: string, start: number, length: number) {
+export async function runQueryExactData(request: any, id: number, objectIdentity: string) {
     try {
-        return await getDataSelection(id, `SELECT * FROM ${objectName}`, start, length)
+        let queryString = null
+        if (objectIdentity.match("^[0-9]{16}$")) {
+            const externalDatabaseQuery = await prisma.externalDatabaseQuery.findFirst({
+                select: {
+                    query: true,
+                },
+                where: {
+                    id: Number(objectIdentity),
+                    externalDatabaseId: id
+                }
+            })
+
+            if (externalDatabaseQuery !== null) {
+                queryString = externalDatabaseQuery.query
+            }
+        } else {
+            queryString = `SELECT * FROM ${objectIdentity}`
+        }
+
+        if (queryString !== null) {
+            const objectResult = await getDataSelection(id, queryString, 0, 0)
+            return ReturnHelper.dataResponse(objectResult?.data!)
+        } else {
+            return ReturnHelper.failedResponse("common.information.failed")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getQueryExactData(request: any, id: number, objectIdentity: string, start: number, length: number) {
+    try {
+        let queryString = null
+        if (objectIdentity.match("^[0-9]{16}$")) {
+            const externalDatabaseQuery = await prisma.externalDatabaseQuery.findFirst({
+                select: {
+                    query: true,
+                },
+                where: {
+                    id: Number(objectIdentity),
+                    externalDatabaseId: id
+                }
+            })
+
+            if (externalDatabaseQuery !== null) {
+                queryString = externalDatabaseQuery.query
+            }
+        } else {
+            queryString = `SELECT * FROM ${objectIdentity}`
+        }
+
+        if (queryString !== null) {
+            return await getDataSelection(id, queryString, start, length)
+        } else {
+            return ReturnHelper.failedResponse("common.information.failed")
+        }
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
@@ -1040,110 +1243,4 @@ export async function getQueryXml(id: number, externalDatabaseQueryTypeId: numbe
             }
         }
     )
-}
-
-export async function getQueryObject(id: number, query: typeof CommonModel.TableModel.static) {
-    const data = await getPostgresqlConnection(
-        id,
-        async (postgresClient: Client) => {
-            const order = `${query.orderColumn} ${query.orderDir}`
-            const condition = query.search.length > 0 ? `AND object_name LIKE \'%${unescape(query.search)}%\'` : ""
-            const queryScript = `
-                SELECT
-					objects.object_id
-					, objects.object_name
-					, objects.object_type
-				 FROM (
-					SELECT
-						pg_class.oid AS object_id
-						, views.viewname AS object_name
-						, 'view' AS object_type
-					FROM pg_catalog.pg_views views
-					LEFT JOIN pg_class ON pg_class.relname = views.viewname
-					WHERE views.schemaname = 'public'
-					UNION ALL
-					SELECT
-						pg_class.oid AS object_id
-						, tables.tablename AS object_name
-						, 'table' AS object_type
-					FROM pg_catalog.pg_tables tables
-					LEFT JOIN pg_class ON pg_class.relname = tables.tablename
-					WHERE tables.schemaname = 'public'
-					UNION ALL
-					SELECT
-						functions.pronamespace AS object_id
-						, functions.proname AS object_name
-						, 'function' AS object_type
-					FROM pg_catalog.pg_proc functions
-					WHERE functions.pronamespace IN(SELECT oid FROM pg_catalog.pg_namespace WHERE nspname = 'public')
-				 ) objects
-				 WHERE 1 = 1
-				 ${condition}
-            `
-
-            const count = await postgresClient.query(`SELECT COUNT(*) FROM (${queryScript})`)
-            const result = await postgresClient.query(queryScript.concat(` ORDER BY ${order} LIMIT ${query.length} OFFSET ${query.start}`))
-
-            return ReturnHelper.pageResponse(count.rows[0].count, result.rows)
-        },
-        (err: any) => {
-            return {
-                header: [{ name: "Result Information" }],
-                data: [{ error: `ERROR : ${err.message}` }]
-            }
-        }
-    )
-
-    return data
-
-    /*
-    try {
-        let condition = {}
-
-        condition = {
-            ...condition,
-            deletedFlag: 0,
-        }
-
-        if (query.search.length > 0) {
-            condition = {
-                ...condition,
-                OR: [
-                    {
-                        code: {
-                            contains: unescape(query.search),
-                            mode: 'insensitive'
-                        }
-                    },
-                    {
-                        databaseConnection: {
-                            contains: unescape(query.search),
-                            mode: 'insensitive'
-                        }
-                    }
-                ]
-            }
-        }
-
-        const count = await prisma.externalDatabase.count({ where: condition })
-        const externalDatabaseList = await prisma.externalDatabase.findMany({
-            select: {
-                id: true,
-                code: true,
-                databaseConnection: true,
-                lockedFlag: true,
-                createdDate: true
-            },
-            skip: query.start,
-            take: query.length,
-            where: condition,
-            orderBy: { [query.orderColumn]: query.orderDir }
-        })
-
-        return ReturnHelper.pageResponse(count, externalDatabaseList)
-    } catch (e: unknown) {
-        console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
-    }
-        */
 }

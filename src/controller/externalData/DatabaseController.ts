@@ -65,23 +65,45 @@ const DatabaseController = new Elysia({})
             })
         }
     )
+    .get(
+        '/:id/query-object-database.json',
+        ({ params: { id }, query }) => DatabaseFacade.getQueryObject(id, query),
+        {
+            params: CommonModel.IntegerIdModel,
+            query: CommonModel.TableModel
+        }
+    )
+    .get(
+        '/:id/query-whitelist-database.json',
+        ({ params: { id }, query }) => DatabaseFacade.getQueryWhitelist(id, query),
+        {
+            params: CommonModel.IntegerIdModel,
+            query: CommonModel.TableModel
+        }
+    )
     .patch(
-        '/:id/:objectName/query-object-data-database.json',
-        ({ request, params: { id, objectName } }) => DatabaseFacade.runQueryObjectData(request, id, objectName),
+        '/:id/:objectIdentity/query-exact-data-database.json',
+        ({ request, params: { id, objectIdentity } }) => DatabaseFacade.runQueryExactData(request, id, objectIdentity),
         {
             params: t.Object({
                 id: t.Numeric(),
-                objectName: t.String(),
+                objectIdentity: t.String({
+                    format: "regex",
+                    pattern: "^\\w+$|^[0-9]{16}$"
+                }),
             }),
         }
     )
     .get(
-        '/:id/:externalDatabaseQueryTypeId/query-object-data-database.json',
-        ({ request, params: { id, externalDatabaseQueryTypeId }, query: { start, length } }) => DatabaseFacade.getQueryObjectData(request, id, externalDatabaseQueryTypeId, start, length),
+        '/:id/:externalDatabaseQueryTypeId/query-exact-data-database.json',
+        ({ request, params: { id, externalDatabaseQueryTypeId }, query: { start, length } }) => DatabaseFacade.getQueryExactData(request, id, externalDatabaseQueryTypeId, start, length),
         {
             params: t.Object({
                 id: t.Numeric(),
-                externalDatabaseQueryTypeId: t.String(),
+                externalDatabaseQueryTypeId: t.String({
+                    format: "regex",
+                    pattern: "^\\w+$|^[0-9]{16}$"
+                }),
             }),
             query: t.Object({
                 start: t.Number(),
@@ -148,14 +170,6 @@ const DatabaseController = new Elysia({})
                 externalDatabaseQueryTypeId: t.Number(),
                 content: t.String(),
             })
-        }
-    )
-    .get(
-        '/:id/query-object-database.json',
-        ({ params: { id }, query }) => DatabaseFacade.getQueryObject(id, query),
-        {
-            params: CommonModel.IntegerIdModel,
-            query: CommonModel.TableModel
         }
     )
 
