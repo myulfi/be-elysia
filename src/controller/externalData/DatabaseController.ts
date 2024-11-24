@@ -81,6 +81,24 @@ const DatabaseController = new Elysia({})
             query: CommonModel.TableModel
         }
     )
+    .post(
+        "/query-whitelist-database.json",
+        ({ request, body }) => DatabaseFacade.createQueryWhitelist(request, body),
+        { body: ExternalModel.DatabaseQueryWhitelist }
+    )
+    .delete(
+        '/:ids/:externalDatabaseId/query-whitelist-database.json',
+        ({ request, params: { ids, externalDatabaseId } }) => DatabaseFacade.removeQueryWhitelist(request, ids, externalDatabaseId),
+        {
+            params: t.Object({
+                ids: t.String({
+                    format: "regex",
+                    pattern: "^\\d{16}(?:\\d{16})*$",
+                }),
+                externalDatabaseId: t.Number(),
+            })
+        }
+    )
     .patch(
         '/:id/:objectIdentity/query-exact-data-database.json',
         ({ request, params: { id, objectIdentity } }) => DatabaseFacade.runQueryExactData(request, id, objectIdentity),

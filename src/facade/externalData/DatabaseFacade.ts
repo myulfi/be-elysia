@@ -780,6 +780,65 @@ export async function getQueryWhitelist(id: number, query: typeof CommonModel.Ta
     }
 }
 
+export async function createQueryWhitelist(request: any, options: typeof ExternalModel.DatabaseQueryWhitelist.static) {
+    try {
+        const queryManual = await prisma.queryManual.findUnique({
+            select: {
+                query: true,
+                externalDatabaseId: true,
+            },
+            where: {
+                id: options.queryManualId
+            }
+        })
+
+        if (queryManual !== null) {
+            const externalDatabaseQuery = await prisma.externalDatabaseQuery.create({
+                data: {
+                    id: CommonHelper.generateId(),
+                    description: options.description,
+                    externalDatabaseId: queryManual.externalDatabaseId,
+                    query: queryManual.query,
+                    deletedFlag: 0,
+                    createdBy: request.username,
+                    createdDate: DateHelper.getCurrentDateTime(),
+                    updatedBy: null,
+                    updatedDate: null,
+                    version: 0,
+                }
+            })
+
+            return ReturnHelper.response(externalDatabaseQuery !== null, "common.information.created", "common.information.failed")
+        } else {
+            return ReturnHelper.failedResponse("common.information.failed")
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function removeQueryWhitelist(request: any, ids: string, externalDatabaseId: number) {
+    try {
+        const externalDatabase = await prisma.externalDatabaseQuery.updateMany({
+            data: {
+                deletedFlag: 1,
+                updatedBy: request.username,
+                updatedDate: DateHelper.getCurrentDateTime(),
+            },
+            where: {
+                id: { in: ids.split(",").map(Number) },
+                externalDatabaseId: externalDatabaseId
+            }
+        })
+
+        return ReturnHelper.response(externalDatabase.count > 0, "common.information.deleted", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
 export async function runQueryExactData(request: any, id: number, objectIdentity: string) {
     try {
         let queryString = null
@@ -849,8 +908,8 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
     return await getPostgresqlConnection(
         id,
         async (postgresClient: Client) => {
-            const result = await postgresClient.query(`${query} LIMIT ${limit} OFFSET ${page}`)
-            if (page === 0 && limit === 0) {
+            if (limit === 0) {
+                const result = await postgresClient.query(`${query} LIMIT 0`)
                 const typeRes = await postgresClient.query('SELECT oid, typname FROM pg_type WHERE oid = ANY($1)', [[...new Set(result.fields.map(field => field.dataTypeID))]])
                 let typeMap: { [key: number]: string } = {}
                 typeRes.rows.forEach(row => {
@@ -884,7 +943,11 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
                 })
 
                 return { data: { queryManualId: queryManual.id, header: header } }
+            } else if (limit === -1) {
+                const result = await postgresClient.query(query)
+                return ReturnHelper.dataResponse(result.rows)
             } else {
+                const result = await postgresClient.query(`${query} LIMIT ${limit} OFFSET ${page}`)
                 const count = await postgresClient.query(query)
                 return ReturnHelper.pageResponse(count.rowCount ?? 0, result.rows)
             }

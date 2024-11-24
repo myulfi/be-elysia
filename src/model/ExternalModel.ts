@@ -32,3 +32,14 @@ export const DatabaseQueryString = t.Object({
         minLength: 1,
     })
 })
+
+export const DatabaseQueryWhitelist = t.Object({
+    description: t.String({
+        minLength: 1,
+        maxLength: 800,
+    }),
+    queryManualId: t.Numeric({
+        format: "regex",
+        pattern: "^[0-9]{16}$"
+    }),
+})
