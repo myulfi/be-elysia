@@ -16,17 +16,3 @@ INSERT INTO tbl_mt_lang_key VALUES (func_generate_id(), 'common', 'text', 'farme
 INSERT INTO tbl_mt_lang_value VALUES
 (func_generate_id(), 1, (SELECT id FROM tbl_mt_lang_key WHERE screen_cd||'.'||label_typ||'.'||key_cd = 'common.text.farmer' ), 'Farmer', 0, 'system', CURRENT_DATE, NULL, NULL, 0),
 (func_generate_id(), 2, (SELECT id FROM tbl_mt_lang_key WHERE screen_cd||'.'||label_typ||'.'||key_cd = 'common.text.farmer' ), 'Petani', 0, 'system', CURRENT_DATE, NULL, NULL, 0);
-
-common.information.needCredential
-common.information.forbidden
-common.information.invalidToken
-common.information.logout="Logout successfully"
-common.information.failed=
-common.information.changePassword
-common.information.oldPasswordWrong
-common.information.generated
-common.information.created
-common.information.updated
-common.information.deleted
-common.information.credentialMustBeFilled=Credential must be filled
-common.information.credentialIsInvalid=Credential is invalid
