@@ -948,8 +948,8 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
                 return ReturnHelper.dataResponse(result.rows)
             } else {
                 const result = await postgresClient.query(`${query} LIMIT ${limit} OFFSET ${page}`)
-                const count = await postgresClient.query(query)
-                return ReturnHelper.pageResponse(count.rowCount ?? 0, result.rows)
+                const count = await postgresClient.query(query.replace(/SELECT\s+.+?\s+FROM/i, 'SELECT COUNT(*) AS amt FROM').replace(/ORDER BY .*/i, ''))
+                return ReturnHelper.pageResponse(count.rows[0].amt ?? 0, result.rows)
             }
         },
         (err: any) => {
