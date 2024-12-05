@@ -226,6 +226,43 @@ model QueryManual {
   @@map("tbl_query_manual")
 }
 
+model ExternalServer {
+  id                         Int                      @id @map("id") @db.SmallInt
+  code                       String                   @map("cd") @db.VarChar(20)
+  description                String?                  @map("dscp") @db.VarChar(500)
+  ip                         String                   @map("ip") @db.VarChar(15)
+  port                       Int                      @map("port") @db.SmallInt
+  username                   String                   @map("username") @db.VarChar(200)
+  password                   String?                  @map("password") @db.VarChar(200)
+  privateKey                 String?                  @map("private_key") @db.VarChar(200)
+  lockedFlag                 Int?                     @default(1) @map("is_lock") @db.SmallInt
+  deletedFlag                Int?                     @default(0) @map("is_del") @db.SmallInt
+  createdBy                  String?                  @map("created_by") @db.VarChar(20)
+  createdDate                DateTime?                @map("dt_created") @db.Timestamp(6)
+  updatedBy                  String?                  @map("updated_by") @db.VarChar(20)
+  updatedDate                DateTime?                @map("dt_updated") @db.Timestamp(6)
+  version                    Int?                     @default(0) @map("version") @db.SmallInt
+  externalServerShortcutList ExternalServerShortcut[]
+
+  @@map("tbl_ext_server")
+}
+
+model ExternalServerShortcut {
+  id               Int            @id @map("id") @db.SmallInt
+  name             String         @map("nm") @db.VarChar(100)
+  externalServerId Int            @map("ext_server_id") @db.SmallInt
+  externalServer   ExternalServer @relation(fields: [externalServerId], references: [id])
+  directory        String         @map("dir") @db.VarChar(1000)
+  deletedFlag      Int?           @default(0) @map("is_del") @db.SmallInt
+  createdBy        String?        @map("created_by") @db.VarChar(20)
+  createdDate      DateTime?      @map("dt_created") @db.Timestamp(6)
+  updatedBy        String?        @map("updated_by") @db.VarChar(20)
+  updatedDate      DateTime?      @map("dt_updated") @db.Timestamp(6)
+  version          Int?           @default(0) @map("version") @db.SmallInt
+
+  @@map("tbl_ext_server_shortcut")
+}
+
 model MasterLanguage {
   id                Int                   @id @map("id") @db.SmallInt
   code              String                @map("cd") @db.VarChar(2)

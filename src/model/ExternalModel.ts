@@ -43,3 +43,34 @@ export const DatabaseQueryWhitelist = t.Object({
         pattern: "^[0-9]{16}$"
     }),
 })
+
+export const ServerModel = t.Object({
+    code: t.String({
+        minLength: 1,
+        maxLength: 20,
+    }),
+    description: t.String({
+        minLength: 1,
+        maxLength: 500,
+    }),
+    ip: t.String({
+        minLength: 1,
+        maxLength: 15,
+    }),
+    port: t.Number({ minimum: 1 }),
+    username: t.String({
+        minLength: 1,
+        maxLength: 200,
+    }),
+    password: t.String({
+        minLength: 1,
+        maxLength: 200,
+    }),
+    privateKey: t.String({
+        minLength: 1,
+        maxLength: 200,
+    }),
+    version: t.Number({
+        default: 0,
+    })
+})
