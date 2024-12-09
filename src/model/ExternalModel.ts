@@ -68,7 +68,6 @@ export const ServerModel = t.Object({
     }),
     privateKey: t.String({
         minLength: 1,
-        maxLength: 200,
     }),
     version: t.Number({
         default: 0,

@@ -6,7 +6,7 @@ CREATE TABLE tbl_ext_server(
 	, port SMALLINT DEFAULT(22)
 	, username VARCHAR (200) NOT NULL
 	, password VARCHAR (200)
-	, private_key VARCHAR (200)
+	, private_key TEXT
 	, is_lock SMALLINT DEFAULT(1)
 	, is_del SMALLINT DEFAULT(0)
 	, created_by VARCHAR (20)

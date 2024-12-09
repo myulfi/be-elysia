@@ -234,7 +234,7 @@ model ExternalServer {
   port                       Int                      @map("port") @db.SmallInt
   username                   String                   @map("username") @db.VarChar(200)
   password                   String?                  @map("password") @db.VarChar(200)
-  privateKey                 String?                  @map("private_key") @db.VarChar(200)
+  privateKey                 String?                  @map("private_key") @db.Text
   lockedFlag                 Int?                     @default(1) @map("is_lock") @db.SmallInt
   deletedFlag                Int?                     @default(0) @map("is_del") @db.SmallInt
   createdBy                  String?                  @map("created_by") @db.VarChar(20)

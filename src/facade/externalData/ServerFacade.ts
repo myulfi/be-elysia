@@ -2,6 +2,8 @@ import { Client, Pool } from "pg"
 import tunnelSsh from "tunnel-ssh"
 import prisma from "../../../prisma/client"
 import fs from "fs"
+
+import * as FileHelper from "../../function/FileHelper"
 import * as CommonInterface from "../../interface/CommonInterface"
 import * as CommonModel from "../../model/CommonModel"
 import * as ExternalModel from "../../model/ExternalModel"
@@ -167,4 +169,33 @@ export async function remove(request: any, ids: string) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
     }
+}
+
+export async function getDefaultDirectoryById(id: number) {
+    try {
+        if (id === 0) {
+            return ReturnHelper.dataResponse({
+                "defaultDirectory": Bun.env.ROOT_SRC_FOLDER
+            })
+        } else {
+            return ReturnHelper.dataResponse({})
+        }
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function getDirectory(id: number, query: any) {
+    const files = await fs.promises.readdir(query.directory);
+    console.log('Files in the directory:');
+
+    for (const file of files) {
+        const filePath = query.directory + "\\" + file
+        const stats = await fs.promises.stat(filePath);
+
+        console.log(`${file} - ${stats.isDirectory()} - ${stats.isFile()} - ${stats.size} bytes - ${stats.birthtime} - ${stats.mtime} - ${stats.mode}`);
+    }
+    // FileHelper.readDir(query.directory)
+    // console.log(query)
 }
