@@ -187,15 +187,21 @@ export async function getDefaultDirectoryById(id: number) {
 }
 
 export async function getDirectory(id: number, query: any) {
-    const files = await fs.promises.readdir(query.directory);
-    console.log('Files in the directory:');
-
-    for (const file of files) {
-        const filePath = query.directory + "\\" + file
-        const stats = await fs.promises.stat(filePath);
-
-        console.log(`${file} - ${stats.isDirectory()} - ${stats.isFile()} - ${stats.size} bytes - ${stats.birthtime} - ${stats.mtime} - ${stats.mode}`);
+    const files = [];
+    for (const name of await fs.promises.readdir(query.directory)) {
+        const stats = await fs.promises.stat(query.directory + "\\" + name)
+        files.push({
+            name: name,
+            directoryFlag: stats.isDirectory(),
+            fileFlag: stats.isFile(),
+            size: stats.size,
+            createdDate: stats.birthtime,
+            modifiedDate: stats.mtime,
+            mode: stats.mode,
+        })
     }
-    // FileHelper.readDir(query.directory)
-    // console.log(query)
+    return ReturnHelper.dataResponse({
+        fileArray: files,
+        directory: query.directory
+    })
 }
