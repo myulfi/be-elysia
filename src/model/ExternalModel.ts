@@ -73,3 +73,18 @@ export const ServerModel = t.Object({
         default: 0,
     })
 })
+
+export const ServerDirectoryModel = t.Object({
+    name: t.String({
+        minLength: 1,
+    }),
+    oldName: t.Optional(
+        t.String({
+            minLength: 1,
+            maxLength: 500,
+        })
+    ),
+    directory: t.String({
+        minLength: 1,
+    }),
+})

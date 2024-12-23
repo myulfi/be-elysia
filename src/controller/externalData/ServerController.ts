@@ -41,5 +41,19 @@ const ServerController = new Elysia({})
         ({ params: { id }, query }) => ServerFacade.getDirectory(id, query),
         { params: CommonModel.NumericIdModel }
     )
-
+    .post(
+        "/:id/server-directory.json",
+        ({ params: { id }, body }) => ServerFacade.createDirectory(id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerDirectoryModel
+        }
+    )
+    .patch("/:id/server-directory.json",
+        ({ params: { id }, body }) => ServerFacade.updateDirectory(id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerDirectoryModel
+        }
+    )
 export default ServerController

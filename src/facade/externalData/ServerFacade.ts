@@ -197,6 +197,8 @@ export async function getDirectory(id: number, query: any) {
             size: stats.size,
             createdDate: stats.birthtime,
             modifiedDate: stats.mtime,
+            ownerName: stats.uid,
+            groupName: stats.gid,
             mode: stats.mode,
         })
     }
@@ -204,4 +206,26 @@ export async function getDirectory(id: number, query: any) {
         fileArray: files,
         directory: query.directory
     })
+}
+
+export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+    try {
+        const aa = await fs.promises.mkdir(options.directory + "\\" + options.name)
+        console.log(aa)
+        return ReturnHelper.response(true, "common.information.created", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function updateDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+    try {
+        const aa = await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
+        console.log(aa)
+        return ReturnHelper.response(true, "common.information.created", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
 }
