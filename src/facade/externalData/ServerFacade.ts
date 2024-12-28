@@ -229,3 +229,41 @@ export async function updateDirectory(id: number, options: typeof ExternalModel.
         return ReturnHelper.failedResponse("common.information.failed")
     }
 }
+
+
+export async function getFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+    try {
+        const data = await fs.promises.readFile(options.directory + "\\" + options.name, 'utf8')
+        console.log(data)
+        return ReturnHelper.dataResponse(
+            {
+                content: data
+            }
+        )
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function createFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+    try {
+        const fileHandle = await fs.promises.open(options.directory + "\\" + options.name, 'wx')
+        await fileHandle.writeFile(options.content)
+        await fileHandle.close()
+        return ReturnHelper.response(true, "common.information.created", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function updateFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+    try {
+        await fs.promises.writeFile(options.directory + "\\" + options.name, options.content)
+        return ReturnHelper.response(true, "common.information.updated", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}

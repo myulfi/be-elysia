@@ -56,4 +56,27 @@ const ServerController = new Elysia({})
             body: ExternalModel.ServerDirectoryModel
         }
     )
+    .get(
+        "/:id/server-file.json",
+        ({ params: { id }, query }) => ServerFacade.getFile(id, query),
+        {
+            params: CommonModel.NumericIdModel,
+            query: ExternalModel.ServerFileModel
+        }
+    )
+    .post(
+        "/:id/server-file.json",
+        ({ params: { id }, body }) => ServerFacade.createFile(id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerFileModel
+        }
+    )
+    .patch("/:id/server-file.json",
+        ({ params: { id }, body }) => ServerFacade.updateFile(id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerFileModel
+        }
+    )
 export default ServerController

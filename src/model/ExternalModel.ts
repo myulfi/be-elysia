@@ -88,3 +88,15 @@ export const ServerDirectoryModel = t.Object({
         minLength: 1,
     }),
 })
+
+export const ServerFileModel = t.Object({
+    name: t.String({
+        minLength: 1,
+    }),
+    content: t.String({
+        minLength: 1,
+    }),
+    directory: t.String({
+        minLength: 1,
+    }),
+})
