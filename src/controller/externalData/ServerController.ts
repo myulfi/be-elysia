@@ -32,6 +32,24 @@ const ServerController = new Elysia({})
         { params: CommonModel.NumericIdArrayModel }
     )
     .get(
+        "/:id/server-shortcut.json",
+        ({ params: { id }, query }) => ServerFacade.getShortcut(id),
+        { params: CommonModel.NumericIdModel }
+    )
+    .post(
+        "/:id/server-shortcut.json",
+        ({ request, params: { id }, body }) => ServerFacade.createShortcut(request, id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerDirectoryModel
+        }
+    )
+    .delete(
+        '/:ids/server-shortcut.json',
+        ({ request, params: { ids } }) => ServerFacade.removeShorcut(request, ids),
+        { params: CommonModel.NumericIdArrayModel }
+    )
+    .get(
         "/:id/server-default-directory.json",
         ({ params: { id } }) => ServerFacade.getDefaultDirectoryById(id),
         { params: CommonModel.NumericIdModel }
@@ -49,11 +67,11 @@ const ServerController = new Elysia({})
             body: ExternalModel.ServerDirectoryModel
         }
     )
-    .patch("/:id/server-directory.json",
-        ({ params: { id }, body }) => ServerFacade.updateDirectory(id, body),
+    .patch("/:id/server-directory-file.json",
+        ({ params: { id }, body }) => ServerFacade.renameDirectoryFile(id, body),
         {
             params: CommonModel.NumericIdModel,
-            body: ExternalModel.ServerDirectoryModel
+            body: ExternalModel.ServerDirectoryFileModel
         }
     )
     .get(

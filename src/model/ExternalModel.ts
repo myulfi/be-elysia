@@ -78,12 +78,19 @@ export const ServerDirectoryModel = t.Object({
     name: t.String({
         minLength: 1,
     }),
-    oldName: t.Optional(
-        t.String({
-            minLength: 1,
-            maxLength: 500,
-        })
-    ),
+    directory: t.String({
+        minLength: 1,
+    }),
+})
+
+export const ServerDirectoryFileModel = t.Object({
+    name: t.String({
+        minLength: 1,
+    }),
+    oldName: t.String({
+        minLength: 1,
+        maxLength: 500,
+    }),
     directory: t.String({
         minLength: 1,
     }),

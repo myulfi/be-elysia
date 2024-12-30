@@ -171,6 +171,70 @@ export async function remove(request: any, ids: string) {
     }
 }
 
+export async function getShortcut(id: number) {
+    try {
+        const externalServerShortcutList = await prisma.externalServerShortcut.findMany({
+            select: {
+                id: true,
+                name: true,
+                directory: true,
+            },
+            where: {
+                externalServerId: id,
+                deletedFlag: 0
+            },
+            orderBy: { createdDate: "desc" }
+        })
+
+        return ReturnHelper.dataResponse(externalServerShortcutList)
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function createShortcut(request: any, id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+    try {
+        const externalServerShorcut = await prisma.externalServerShortcut.create({
+            data: {
+                id: CommonHelper.generateId(),
+                name: options.name,
+                directory: options.directory,
+                externalServerId: id,
+                deletedFlag: 0,
+                createdBy: request.username,
+                createdDate: DateHelper.getCurrentDateTime(),
+                updatedBy: null,
+                updatedDate: null,
+                version: 0,
+            }
+        })
+
+        return ReturnHelper.dataResponse(externalServerShorcut)
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
+export async function removeShorcut(request: any, ids: string) {
+    try {
+        const externalServer = await prisma.externalServerShortcut.updateMany({
+            data: {
+                deletedFlag: 1,
+                updatedBy: request.username,
+                updatedDate: DateHelper.getCurrentDateTime(),
+            },
+            where: { id: { in: ids.split(",").map(Number) } }
+        })
+
+        return ReturnHelper.response(externalServer.count > 0, "common.information.deleted", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
 export async function getDefaultDirectoryById(id: number) {
     try {
         if (id === 0) {
@@ -219,11 +283,10 @@ export async function createDirectory(id: number, options: typeof ExternalModel.
     }
 }
 
-export async function updateDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+export async function renameDirectoryFile(id: number, options: typeof ExternalModel.ServerDirectoryFileModel.static) {
     try {
-        const aa = await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
-        console.log(aa)
-        return ReturnHelper.response(true, "common.information.created", "common.information.failed")
+        await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
+        return ReturnHelper.response(true, "common.information.renamed", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
