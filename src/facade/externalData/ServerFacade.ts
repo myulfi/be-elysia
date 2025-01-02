@@ -330,3 +330,17 @@ export async function updateFile(id: number, options: typeof ExternalModel.Serve
         return ReturnHelper.failedResponse("common.information.failed")
     }
 }
+
+export async function uploadFile(id: number, options: typeof ExternalModel.ServerUploadFileModel.static) {
+    try {
+        console.log(options.files[0].name)
+        console.log(options.files[1].name)
+        // const fileHandle = await fs.promises.open(options.directory + "\\" + options.name, 'wx')
+        // await fileHandle.writeFile(options.content)
+        // await fileHandle.close()
+        return ReturnHelper.response(false, "common.information.created", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}

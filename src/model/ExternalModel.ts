@@ -107,3 +107,10 @@ export const ServerFileModel = t.Object({
         minLength: 1,
     }),
 })
+
+export const ServerUploadFileModel = t.Object({
+    files: t.Files(),
+    directory: t.String({
+        minLength: 1,
+    }),
+})

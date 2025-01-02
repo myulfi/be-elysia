@@ -97,4 +97,12 @@ const ServerController = new Elysia({})
             body: ExternalModel.ServerFileModel
         }
     )
+    .post(
+        "/:id/server-upload-file.json",
+        ({ params: { id }, body }) => ServerFacade.uploadFile(id, body),
+        {
+            params: CommonModel.NumericIdModel,
+            body: ExternalModel.ServerUploadFileModel
+        }
+    )
 export default ServerController
