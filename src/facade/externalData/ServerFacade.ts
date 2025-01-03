@@ -255,6 +255,7 @@ export async function getDirectory(id: number, query: any) {
     for (const name of await fs.promises.readdir(query.directory)) {
         const stats = await fs.promises.stat(query.directory + "\\" + name)
         files.push({
+            id: name,
             name: name,
             directoryFlag: stats.isDirectory(),
             fileFlag: stats.isFile(),
@@ -293,6 +294,17 @@ export async function renameDirectoryFile(id: number, options: typeof ExternalMo
     }
 }
 
+export async function removeDirectoryFile(id: number, options: typeof ExternalModel.ServerRemoveDirectoryFileModel.static) {
+    try {
+        options.name.forEach(name => {
+            FileHelper.remove(options.directory + "\\" + name)
+        })
+        return ReturnHelper.response(true, "common.information.uploaded", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
 
 export async function getFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
     try {
@@ -333,12 +345,10 @@ export async function updateFile(id: number, options: typeof ExternalModel.Serve
 
 export async function uploadFile(id: number, options: typeof ExternalModel.ServerUploadFileModel.static) {
     try {
-        console.log(options.files[0].name)
-        console.log(options.files[1].name)
-        // const fileHandle = await fs.promises.open(options.directory + "\\" + options.name, 'wx')
-        // await fileHandle.writeFile(options.content)
-        // await fileHandle.close()
-        return ReturnHelper.response(false, "common.information.created", "common.information.failed")
+        options.files.forEach(file => {
+            Bun.write(options.directory + "\\" + file.name, file)
+        })
+        return ReturnHelper.response(true, "common.information.uploaded", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")

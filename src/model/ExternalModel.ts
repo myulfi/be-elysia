@@ -96,6 +96,17 @@ export const ServerDirectoryFileModel = t.Object({
     }),
 })
 
+export const ServerRemoveDirectoryFileModel = t.Object({
+    name: t.Array(
+        t.String({
+            minLength: 1,
+        })
+    ),
+    directory: t.String({
+        minLength: 1,
+    }),
+})
+
 export const ServerFileModel = t.Object({
     name: t.String({
         minLength: 1,
