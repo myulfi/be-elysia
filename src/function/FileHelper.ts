@@ -31,6 +31,14 @@ export function getImage(filePath: string) {
     return fileContent
 }
 
-export function remove(filePath: string) {
-    fs.unlinkSync(filePath)
+export async function remove(filePath: string) {
+    const stats = await fs.promises.stat(filePath)
+    if (stats.isDirectory()) {
+        const aa = fs.promises.rmdir(filePath)
+        console.log("===")
+        console.log(aa)
+        console.log("===")
+    } else {
+        fs.unlinkSync(filePath)
+    }
 }

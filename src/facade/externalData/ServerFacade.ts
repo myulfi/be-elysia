@@ -299,7 +299,7 @@ export async function removeDirectoryFile(id: number, options: typeof ExternalMo
         options.name.forEach(name => {
             FileHelper.remove(options.directory + "\\" + name)
         })
-        return ReturnHelper.response(true, "common.information.uploaded", "common.information.failed")
+        return ReturnHelper.response(true, "common.information.removed", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
         return ReturnHelper.failedResponse("common.information.failed")
