@@ -96,6 +96,20 @@ export const ServerDirectoryFileModel = t.Object({
     }),
 })
 
+export const ServerPasteDirectoryFileModel = t.Object({
+    name: t.Array(
+        t.String({
+            minLength: 1,
+        })
+    ),
+    source: t.String({
+        minLength: 1,
+    }),
+    destination: t.String({
+        minLength: 1,
+    }),
+})
+
 export const ServerRemoveDirectoryFileModel = t.Object({
     name: t.Array(
         t.String({

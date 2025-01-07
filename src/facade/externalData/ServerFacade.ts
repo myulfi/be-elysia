@@ -294,6 +294,26 @@ export async function renameDirectoryFile(id: number, options: typeof ExternalMo
     }
 }
 
+export async function pasteDirectoryFile(id: number, options: typeof ExternalModel.ServerPasteDirectoryFileModel.static) {
+    try {
+        let newName: string = ""
+        options.name.forEach((name) => {
+            newName = name
+            while (true) {
+                if (fs.existsSync(options.destination + "\\" + newName) === false) {
+                    fs.promises.copyFile(options.source + "\\" + name, options.destination + "\\" + newName)
+                    break
+                }
+                newName = FileHelper.renameFileautomatically(newName)
+            }
+        })
+        return ReturnHelper.response(true, "common.information.pasted", "common.information.failed")
+    } catch (e: unknown) {
+        console.log(e)
+        return ReturnHelper.failedResponse("common.information.failed")
+    }
+}
+
 export async function removeDirectoryFile(id: number, options: typeof ExternalModel.ServerRemoveDirectoryFileModel.static) {
     try {
         options.name.forEach(name => {

@@ -22,3 +22,4 @@ export const QUERY_PATTERN = "(SELECT)\\s+[\\s\\S]*\\s+FROM\\s+(\\S+)"
 // export const QUERY_MANUAL = "(?si)((--.*(\r\n|\r|\n))|(\\/\\*.*\\*\\/))*\\s?{value}\\s.+"
 export const QUERY_MANUAL = "^((--.*(\r\n|\r|\n))|(\\/\\*.*\\*\\/))*\\s?{value}\\s.+$"
 export const MULTIPLE_SEARCH = "(\\\"[^\\\"]*\\\")|\\w+"
+export const FILE_NAME = /^(.*?)(?:\s+copy(?:_(\d+))?)?(?:\.(\w+))?$/

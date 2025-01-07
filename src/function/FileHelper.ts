@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import * as RegexConstants from "../constants/RegexConstants"
 
 export async function save(folder: string, file: File): Promise<string> {
     if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true })
@@ -35,10 +36,23 @@ export async function remove(filePath: string) {
     const stats = await fs.promises.stat(filePath)
     if (stats.isDirectory()) {
         const aa = fs.promises.rmdir(filePath)
-        console.log("===")
-        console.log(aa)
-        console.log("===")
     } else {
         fs.unlinkSync(filePath)
+    }
+}
+
+export function renameFileautomatically(name: string) {
+    const match = name.match(RegexConstants.FILE_NAME)
+    if (match) {
+        const baseName = match[1];
+        const copyNumber = match[2] !== undefined ? parseInt(match[2], 10) : (name.includes("copy") ? 1 : 0)
+        const extension = match[3] || ''
+        if (copyNumber > 0) {
+            return `${baseName} copy_${copyNumber + 1}${extension.length > 1 ? "." + extension : ""}`
+        } else {
+            return `${baseName} copy${extension.length > 1 ? "." + extension : ""}`
+        }
+    } else {
+        return name
     }
 }

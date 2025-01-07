@@ -68,7 +68,7 @@ const ServerController = new Elysia({})
         }
     )
     .patch(
-        "/:id/server-directory-file.json",
+        "/:id/server-rename-directory-file.json",
         ({ params: { id }, body }) => ServerFacade.renameDirectoryFile(id, body),
         {
             params: CommonModel.NumericIdModel,
@@ -76,7 +76,15 @@ const ServerController = new Elysia({})
         }
     )
     .patch(
-        "/:id/server-directory-file.json",
+        "/:id/server-paste-directory-file.json",
+        ({ params: { id }, body }) => ServerFacade.pasteDirectoryFile(id, body),
+        {
+            params: CommonModel.IntegerIdModel,
+            body: ExternalModel.ServerPasteDirectoryFileModel
+        }
+    )
+    .patch(
+        "/:id/server-delete-directory-file.json",
         ({ params: { id }, body }) => ServerFacade.removeDirectoryFile(id, body),
         {
             params: CommonModel.IntegerIdModel,
