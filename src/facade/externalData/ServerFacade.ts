@@ -301,7 +301,12 @@ export async function pasteDirectoryFile(id: number, options: typeof ExternalMod
             newName = name
             while (true) {
                 if (fs.existsSync(options.destination + "\\" + newName) === false) {
-                    fs.promises.copyFile(options.source + "\\" + name, options.destination + "\\" + newName)
+                    const stats = fs.statSync(options.source + "\\" + name)
+                    if (stats.isDirectory()) {
+                        FileHelper.copyDirectory(options.source + "\\" + name, options.destination + "\\" + newName)
+                    } else {
+                        fs.promises.copyFile(options.source + "\\" + name, options.destination + "\\" + newName)
+                    }
                     break
                 }
                 newName = FileHelper.renameFileautomatically(newName)

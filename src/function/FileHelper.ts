@@ -41,6 +41,23 @@ export async function remove(filePath: string) {
     }
 }
 
+export function copyDirectory(source: string, destination: string) {
+    fs.mkdirSync(destination)
+    const items = fs.readdirSync(source)
+    items.forEach((item) => {
+        const srcPath = path.join(source, item);
+        const destPath = path.join(destination, item);
+
+        const stats = fs.statSync(srcPath);
+
+        if (stats.isDirectory()) {
+            copyDirectory(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    })
+}
+
 export function renameFileautomatically(name: string) {
     const match = name.match(RegexConstants.FILE_NAME)
     if (match) {
