@@ -1,5 +1,4 @@
-import { Client, Pool } from "pg"
-import tunnelSsh from "tunnel-ssh"
+import { Client } from "ssh2"
 import prisma from "../../../prisma/client"
 import fs from "fs"
 
@@ -235,14 +234,76 @@ export async function removeShorcut(request: any, ids: string) {
     }
 }
 
+async function accessExternalServer(id: number, executedFlag: number, path: string): Promise<string> {
+    const externalServer = await prisma.externalServer.findUnique({
+        select: {
+            id: true,
+            code: true,
+            ip: true,
+            port: true,
+            username: true,
+            password: true,
+            privateKey: true,
+        },
+        where: {
+            id: id,
+            deletedFlag: 0
+        },
+    })
+    if (externalServer) {
+        return await new Promise((resolve, reject) => {
+            const sshConfig = {
+                host: externalServer.ip,
+                port: externalServer.port,
+                username: externalServer.username,
+                privateKey: Buffer.from(externalServer.privateKey!, 'utf8')
+            }
+
+            const ssh = new Client()
+            ssh.on("ready", async () => {
+                ssh.exec(path, (err: any, stream: any) => {
+                    if (err) {
+                        reject(err)
+                    }
+
+                    if (executedFlag === 1) {
+                        stream
+                            .on("close", (code: any, signal: any) => {
+                                ssh.end()
+                                resolve("true")
+                            })
+                            .stderr.on('data', (data: any) => {
+                                reject(err)
+                            })
+                    } else {
+                        stream
+                            .on("close", (code: any, signal: any) => {
+                                ssh.end()
+                            })
+                            .on("data", (data: any) => {
+                                resolve(data.toString().trim())
+                            })
+                            .stderr.on('data', (data: any) => {
+                                reject(err)
+                            })
+                    }
+                }).on("error", (err: any) => {
+                    reject(err)
+                })
+            }).connect(sshConfig)
+        })
+    } else {
+        return "common.information.notFound"
+    }
+}
+
 export async function getDefaultDirectoryById(id: number) {
     try {
         if (id === 0) {
-            return ReturnHelper.dataResponse({
-                "defaultDirectory": Bun.env.ROOT_SRC_FOLDER
-            })
+            return ReturnHelper.dataResponse({ "defaultDirectory": Bun.env.ROOT_SRC_FOLDER })
         } else {
-            return ReturnHelper.dataResponse({})
+            const defaultDirectory = await accessExternalServer(id, 0, "pwd")
+            return ReturnHelper.dataResponse({ "defaultDirectory": defaultDirectory })
         }
     } catch (e: unknown) {
         console.log(e)
@@ -251,32 +312,58 @@ export async function getDefaultDirectoryById(id: number) {
 }
 
 export async function getDirectory(id: number, query: any) {
-    const files = [];
-    for (const name of await fs.promises.readdir(query.directory)) {
-        const stats = await fs.promises.stat(query.directory + "\\" + name)
-        files.push({
-            id: name,
-            name: name,
-            directoryFlag: stats.isDirectory(),
-            fileFlag: stats.isFile(),
-            size: stats.size,
-            createdDate: stats.birthtime,
-            modifiedDate: stats.mtime,
-            ownerName: stats.uid,
-            groupName: stats.gid,
-            mode: stats.mode,
+    const files = []
+    if (id === 0) {
+        for (const name of await fs.promises.readdir(query.directory)) {
+            const stats = await fs.promises.stat(query.directory + "\\" + name)
+            files.push({
+                id: name,
+                name: name,
+                directoryFlag: stats.isDirectory(),
+                fileFlag: stats.isFile(),
+                size: stats.size,
+                createdDate: stats.birthtime,
+                modifiedDate: stats.mtime,
+                ownerName: stats.uid,
+                groupName: stats.gid,
+                mode: stats.mode,
+            })
+        }
+    } else {
+        const lines = await accessExternalServer(id, 0, `ls -l ${query.directory}`)
+        for (let line of lines.split('\n').filter((line: string) => line.trim() !== '')) {
+            const parts = line.split(/\s+/)
+            if (parts.length >= 9) {
+                const file = {
+                    id: parts.slice(8).join(' '),
+                    name: parts.slice(8).join(' '),
+                    directoryFlag: parts[0].startsWith("d") ? 1 : 0,
+                    fileFlag: parts[0].startsWith("d") ? 0 : 1,
+                    size: parts[4],
+                    createdDate: `${parts[5]} ${parts[6]} ${parts[7]}`,
+                    modifiedDate: `${parts[5]} ${parts[6]} ${parts[7]}`,
+                    ownerName: parts[2],
+                    groupName: parts[3],
+                    mode: parts[0],
+                }
+                files.push(file)
+            }
+        }
+
+        return ReturnHelper.dataResponse({
+            fileArray: files,
+            directory: query.directory
         })
     }
-    return ReturnHelper.dataResponse({
-        fileArray: files,
-        directory: query.directory
-    })
 }
 
 export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
     try {
-        const aa = await fs.promises.mkdir(options.directory + "\\" + options.name)
-        console.log(aa)
+        if (id === 0) {
+            await fs.promises.mkdir(options.directory + "\\" + options.name)
+        } else {
+            accessExternalServer(id, 1, `mkdir "${options.directory}//${options.name}"`)
+        }
         return ReturnHelper.response(true, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
@@ -286,7 +373,11 @@ export async function createDirectory(id: number, options: typeof ExternalModel.
 
 export async function renameDirectoryFile(id: number, options: typeof ExternalModel.ServerDirectoryFileModel.static) {
     try {
-        await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
+        if (id === 0) {
+            await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
+        } else {
+            accessExternalServer(id, 1, `mv "${options.directory}//${options.oldName}" "${options.directory}//${options.name}"`)
+        }
         return ReturnHelper.response(true, "common.information.renamed", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
