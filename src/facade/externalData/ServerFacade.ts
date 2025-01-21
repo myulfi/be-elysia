@@ -297,7 +297,7 @@ async function accessExternalServer(id: number, executedFlag: number, path: stri
     }
 }
 
-async function uploadFileExternalServer(id: number, remotePath: string, files: File[]): Promise<string> {
+async function uploadFileExternalServer(id: number, remotePath: string, files: File[]) {
     const externalServer = await prisma.externalServer.findUnique({
         select: {
             id: true,
@@ -314,38 +314,37 @@ async function uploadFileExternalServer(id: number, remotePath: string, files: F
         },
     })
     if (externalServer) {
-        return await new Promise((resolve, reject) => {
-            const sshConfig = {
-                host: externalServer.ip,
-                port: externalServer.port,
-                username: externalServer.username,
-                privateKey: Buffer.from(externalServer.privateKey!, 'utf8')
-            }
+        console.log("haha")
+        console.log(files.length)
+        const sshConfig = {
+            host: externalServer.ip,
+            port: externalServer.port,
+            username: externalServer.username,
+            privateKey: Buffer.from(externalServer.privateKey!, 'utf8')
+        }
 
-            const ssh = new Client()
-            ssh.on("ready", async () => {
-                console.log("hiiii")
-                ssh.sftp((err: any, sftp: any) => {
-                    console.log("haha")
-                    if (err) {
-                        reject(err)
-                    }
+        const ssh = new Client()
+        ssh.on("ready", () => {
+            ssh.sftp((err: any, sftp: any) => {
+                if (err) {
+                    // reject(err)
+                }
 
-                    files.map(file => {
-                        sftp.writeFile(remotePath + "/" + file.name, file.arrayBuffer, (err: any) => {
-                            if (err) {
-                                reject(err)
-                            } else {
-                                resolve("true")
-                            }
-                        });
-                    })
-                }).connect(sshConfig)
-            }).on("error", (err: any) => {
-                console.log("jaja")
-                reject(err)
+                files.map(file => {
+                    sftp.writeFile(remotePath + "/" + file.name, file.arrayBuffer, (err: any) => {
+                        if (err) {
+                            // reject(err)
+                        } else {
+                            // resolve("true")
+                        }
+                    });
+                })
             })
-        })
+        }).on("error", (err: any) => {
+            console.log("jaja")
+            // reject(err)
+        }).connect(sshConfig)
+
     } else {
         return "common.information.notFound"
     }
