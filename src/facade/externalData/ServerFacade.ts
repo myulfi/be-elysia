@@ -402,7 +402,7 @@ export async function getDirectory(id: number, query: any) {
     const files = []
     if (id === 0) {
         for (const name of await fs.promises.readdir(query.directory)) {
-            const stats = await fs.promises.stat(query.directory + "\\" + name)
+            const stats = await fs.promises.stat(`${query.directory}/${name}`)
             files.push({
                 id: name,
                 name: name,
@@ -417,7 +417,7 @@ export async function getDirectory(id: number, query: any) {
             })
         }
     } else {
-        const lines = await getDataExternalServer(id, `ls -l --time-style='+%Y-%m-%d %H:%M:%S' "${query.directory}"`)
+        const lines = await getDataExternalServer(id, `ls -l --time-style='+%Y-%m-%d %H:%M:%S' "${query.directory.length > 0 ? query.directory : "/"}"`)
         for (let line of lines.split("\n").filter((line: string) => line.trim() !== "")) {
             const parts = line.split(/\s+/)
             if (parts.length >= 7) {
@@ -436,12 +436,12 @@ export async function getDirectory(id: number, query: any) {
                 files.push(file)
             }
         }
-
-        return ReturnHelper.dataResponse({
-            fileArray: files,
-            directory: query.directory
-        })
     }
+
+    return ReturnHelper.dataResponse({
+        fileArray: files,
+        directory: query.directory
+    })
 }
 
 export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
