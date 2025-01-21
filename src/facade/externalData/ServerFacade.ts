@@ -3,14 +3,11 @@ import prisma from "../../../prisma/client"
 import fs from "fs"
 
 import * as FileHelper from "../../function/FileHelper"
-import * as CommonInterface from "../../interface/CommonInterface"
 import * as CommonModel from "../../model/CommonModel"
 import * as ExternalModel from "../../model/ExternalModel"
 import * as ReturnHelper from "../../function/ReturnHelper"
 import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
-import * as RegexConstants from "../../constants/RegexConstants"
-import * as CommonConstants from "../../constants/CommonConstants"
 
 export async function get(query: typeof CommonModel.TableModel.static) {
     try {
@@ -234,7 +231,7 @@ export async function removeShorcut(request: any, ids: string) {
     }
 }
 
-async function accessExternalServer(id: number, executedFlag: number, path: string): Promise<string> {
+async function commandExternalServer(id: number, path: string): Promise<string> {
     const externalServer = await prisma.externalServer.findUnique({
         select: {
             id: true,
@@ -266,27 +263,67 @@ async function accessExternalServer(id: number, executedFlag: number, path: stri
                         reject(err)
                     }
 
-                    if (executedFlag === 1) {
-                        stream
-                            .on("close", (code: any, signal: any) => {
-                                ssh.end()
-                                resolve("true")
-                            })
-                            .stderr.on('data', (data: any) => {
-                                reject(err)
-                            })
-                    } else {
-                        stream
-                            .on("close", (code: any, signal: any) => {
-                                ssh.end()
-                            })
-                            .on("data", (data: any) => {
-                                resolve(data.toString().trim())
-                            })
-                            .stderr.on('data', (data: any) => {
-                                reject(err)
-                            })
+                    stream
+                        .on("close", (code: any, signal: any) => {
+                            ssh.end()
+                        })
+                        .stderr.on('data', (data: any) => {
+                            reject(err)
+                        })
+                }).on("error", (err: any) => {
+                    reject(err)
+                })
+            }).connect(sshConfig)
+        })
+    } else {
+        return "common.information.notFound"
+    }
+}
+
+async function getDataExternalServer(id: number, path: string): Promise<string> {
+    const externalServer = await prisma.externalServer.findUnique({
+        select: {
+            id: true,
+            code: true,
+            ip: true,
+            port: true,
+            username: true,
+            password: true,
+            privateKey: true,
+        },
+        where: {
+            id: id,
+            deletedFlag: 0
+        },
+    })
+
+    if (externalServer) {
+        return await new Promise((resolve, reject) => {
+            const sshConfig = {
+                host: externalServer.ip,
+                port: externalServer.port,
+                username: externalServer.username,
+                privateKey: Buffer.from(externalServer.privateKey!, 'utf8')
+            }
+
+            const ssh = new Client()
+            ssh.on("ready", async () => {
+                ssh.exec(path, (err: any, stream: any) => {
+                    if (err) {
+                        reject(err)
                     }
+
+                    stream
+                        .on("close", (code: any, signal: any) => {
+                            ssh.end()
+                            resolve("true")
+                        })
+                        .on("data", (data: any) => {
+                            resolve(data.toString().trim())
+                        })
+                        .stderr.on('data', (data: any) => {
+                            reject(err)
+                        })
                 }).on("error", (err: any) => {
                     reject(err)
                 })
@@ -314,8 +351,6 @@ async function uploadFileExternalServer(id: number, remotePath: string, files: F
         },
     })
     if (externalServer) {
-        console.log("haha")
-        console.log(files.length)
         const sshConfig = {
             host: externalServer.ip,
             port: externalServer.port,
@@ -341,7 +376,6 @@ async function uploadFileExternalServer(id: number, remotePath: string, files: F
                 })
             })
         }).on("error", (err: any) => {
-            console.log("jaja")
             // reject(err)
         }).connect(sshConfig)
 
@@ -355,7 +389,7 @@ export async function getDefaultDirectoryById(id: number) {
         if (id === 0) {
             return ReturnHelper.dataResponse({ "defaultDirectory": Bun.env.ROOT_SRC_FOLDER })
         } else {
-            const defaultDirectory = await accessExternalServer(id, 0, "pwd")
+            const defaultDirectory = await getDataExternalServer(id, "pwd")
             return ReturnHelper.dataResponse({ "defaultDirectory": defaultDirectory })
         }
     } catch (e: unknown) {
@@ -383,18 +417,18 @@ export async function getDirectory(id: number, query: any) {
             })
         }
     } else {
-        const lines = await accessExternalServer(id, 0, `ls -l "${query.directory}"`)
-        for (let line of lines.split('\n').filter((line: string) => line.trim() !== '')) {
+        const lines = await getDataExternalServer(id, `ls -l --time-style='+%Y-%m-%d %H:%M:%S' "${query.directory}"`)
+        for (let line of lines.split("\n").filter((line: string) => line.trim() !== "")) {
             const parts = line.split(/\s+/)
-            if (parts.length >= 9) {
+            if (parts.length >= 7) {
                 const file = {
-                    id: parts.slice(8).join(' '),
-                    name: parts.slice(8).join(' '),
+                    id: parts.slice(7).join(' '),
+                    name: parts.slice(7).join(' '),
                     directoryFlag: parts[0].startsWith("d") ? 1 : 0,
                     fileFlag: parts[0].startsWith("d") ? 0 : 1,
                     size: parts[4],
-                    createdDate: `${parts[5]} ${parts[6]} ${parts[7]}`,
-                    modifiedDate: `${parts[5]} ${parts[6]} ${parts[7]}`,
+                    createdDate: `${parts[5]} ${parts[6]}`,
+                    modifiedDate: `${parts[5]} ${parts[6]}`,
                     ownerName: parts[2],
                     groupName: parts[3],
                     mode: parts[0],
@@ -413,9 +447,9 @@ export async function getDirectory(id: number, query: any) {
 export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
     try {
         if (id === 0) {
-            await fs.promises.mkdir(options.directory + "\\" + options.name)
+            await fs.promises.mkdir(`${options.directory}/${options.name}`)
         } else {
-            accessExternalServer(id, 1, `mkdir "${options.directory}//${options.name}"`)
+            commandExternalServer(id, `mkdir "${options.directory}/${options.name}"`)
         }
         return ReturnHelper.response(true, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
@@ -427,9 +461,9 @@ export async function createDirectory(id: number, options: typeof ExternalModel.
 export async function renameDirectoryFile(id: number, options: typeof ExternalModel.ServerDirectoryFileModel.static) {
     try {
         if (id === 0) {
-            await fs.promises.rename(options.directory + "\\" + options.oldName!, options.directory + "\\" + options.name)
+            await fs.promises.rename(`${options.directory}/${options.oldName!}`, `${options.directory}/${options.name}`)
         } else {
-            accessExternalServer(id, 1, `mv "${options.directory}//${options.oldName}" "${options.directory}//${options.name}"`)
+            commandExternalServer(id, `mv "${options.directory}//${options.oldName}" "${options.directory}//${options.name}"`)
         }
         return ReturnHelper.response(true, "common.information.renamed", "common.information.failed")
     } catch (e: unknown) {
@@ -441,29 +475,29 @@ export async function renameDirectoryFile(id: number, options: typeof ExternalMo
 export async function pasteDirectoryFile(id: number, options: typeof ExternalModel.ServerPasteDirectoryFileModel.static) {
     try {
         let newName: string = ""
-        options.name.forEach(async (name) => {
+        for await (const name of options.name) {
             newName = name
             while (true) {
                 if (id === 0) {
-                    if (fs.existsSync(options.destination + "\\" + newName) === false) {
-                        const stats = fs.statSync(options.source + "\\" + name)
+                    if (fs.existsSync(`${options.destination}/${newName}`) === false) {
+                        const stats = fs.statSync(`${options.source}/${name}`)
                         if (stats.isDirectory()) {
-                            FileHelper.copyDirectory(options.source + "\\" + name, options.destination + "\\" + newName)
+                            FileHelper.copyDirectory(`${options.source}/${name}`, `${options.destination}/${newName}`)
                         } else {
-                            fs.promises.copyFile(options.source + "\\" + name, options.destination + "\\" + newName)
+                            fs.promises.copyFile(`${options.source}/${name}`, `${options.destination}/${newName}`)
                         }
                         break
                     }
                 } else {
-                    var exists = await accessExternalServer(id, 0, `test -e "${options.destination}/${newName}" && echo 1 || echo 0`)
+                    var exists = await getDataExternalServer(id, `test -e "${options.destination}/${newName}" && echo 1 || echo 0`)
                     if (exists === "0") {
-                        await accessExternalServer(id, 1, `cp -r "${options.source}/${name}" "${options.destination}//${newName}"`)
+                        commandExternalServer(id, `cp -r "${options.source}/${name}" "${options.destination}/${newName}"`)
                         break
                     }
                 }
                 newName = FileHelper.renameFileautomatically(newName)
             }
-        })
+        }
         return ReturnHelper.response(true, "common.information.pasted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
@@ -475,12 +509,12 @@ export async function removeDirectoryFile(id: number, options: typeof ExternalMo
     try {
         if (id === 0) {
             options.name.forEach(name => {
-                FileHelper.remove(options.directory + "\\" + name)
+                FileHelper.remove(`${options.directory}/${name}`)
             })
         } else {
-            options.name.forEach(async (name) => {
-                await accessExternalServer(id, 1, `rm "${options.directory}//${name}" || rmdir "${options.directory}//${name}"`)
-            })
+            for await (const name of options.name) {
+                commandExternalServer(id, `rm "${options.directory}/${name}" || rmdir "${options.directory}/${name}"`)
+            }
         }
         return ReturnHelper.response(true, "common.information.removed", "common.information.failed")
     } catch (e: unknown) {
@@ -493,9 +527,9 @@ export async function getFile(id: number, options: typeof ExternalModel.ServerFi
     try {
         let data
         if (id === 0) {
-            data = await fs.promises.readFile(options.directory + "/" + options.name, 'utf8')
+            data = await fs.promises.readFile(`${options.directory}/${options.name}`, "utf8")
         } else {
-            data = await accessExternalServer(id, 0, `cat "${options.directory + "/" + options.name}"`)
+            data = await getDataExternalServer(id, `cat "${options.directory}/${options.name}"`)
         }
 
         return ReturnHelper.dataResponse({ content: data })
@@ -505,15 +539,14 @@ export async function getFile(id: number, options: typeof ExternalModel.ServerFi
     }
 }
 
-
 export async function createFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
     try {
         if (id === 0) {
-            const fileHandle = await fs.promises.open(options.directory + "\\" + options.name, 'wx')
+            const fileHandle = await fs.promises.open(`${options.directory}/${options.name}`, 'wx')
             await fileHandle.writeFile(options.content)
             await fileHandle.close()
         } else {
-            accessExternalServer(id, 1, `echo '${options.content.replace(/'/g, "'\\''")}' > "${options.directory + "/" + options.name}"`)
+            commandExternalServer(id, `echo '${options.content.replace(/'/g, "'\\''")}' > "${options.directory}/${options.name}"`)
         }
         return ReturnHelper.response(true, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
@@ -525,9 +558,9 @@ export async function createFile(id: number, options: typeof ExternalModel.Serve
 export async function updateFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
     try {
         if (id === 0) {
-            await fs.promises.writeFile(options.directory + "\\" + options.name, options.content)
+            await fs.promises.writeFile(`${options.directory}/${options.name}`, options.content)
         } else {
-            accessExternalServer(id, 0, `echo '${options.content.replace(/'/g, "'\\''")}' > "${options.directory + "/" + options.name}"`)
+            commandExternalServer(id, `echo '${options.content.replace(/'/g, "'\\''")}' > "${options.directory + "/" + options.name}"`)
         }
         return ReturnHelper.response(true, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
@@ -536,12 +569,11 @@ export async function updateFile(id: number, options: typeof ExternalModel.Serve
     }
 }
 
-//belum
 export async function uploadFile(id: number, options: typeof ExternalModel.ServerUploadFileModel.static) {
     try {
         if (id === 0) {
             options.files.forEach(file => {
-                Bun.write(options.directory + "\\" + file.name, file)
+                Bun.write(`${options.directory}/${file.name}`, file)
             })
         } else {
             uploadFileExternalServer(id, options.directory, options.files)
