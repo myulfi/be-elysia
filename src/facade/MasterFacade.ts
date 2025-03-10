@@ -1,7 +1,7 @@
 import prisma from "../../prisma/client"
 import * as ReturnHelper from "../function/ReturnHelper"
 
-export async function getLanguage() {
+export async function getLanguage(error: any) {
     try {
         const masterLanguageList = await prisma.masterLanguage.findMany({
             select: {
@@ -19,11 +19,11 @@ export async function getLanguage() {
         return ReturnHelper.dataResponse(masterLanguageList)
     } catch (e: unknown) {
         console.error(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getDatabaseType() {
+export async function getDatabaseType(error: any) {
     try {
         const masterDatabaseTypeList = await prisma.masterDatabaseType.findMany({
             select: {
@@ -42,6 +42,6 @@ export async function getDatabaseType() {
         return ReturnHelper.dataResponse(masterDatabaseTypeList)
     } catch (e: unknown) {
         console.error(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

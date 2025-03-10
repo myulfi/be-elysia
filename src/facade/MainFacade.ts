@@ -1,16 +1,59 @@
 import prisma from "../../prisma/client"
 import * as ReturnHelper from "../function/ReturnHelper"
 
-export async function logout(request: any) {
+export async function logout(request: any, error: any) {
     try {
-        return ReturnHelper.successResponse("common.information.logout")
+        return ReturnHelper.messageResponse("common.information.logout")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function changePassword(request: any, options: any) {
+export async function profile(request: any, error: any) {
+    try {
+        const user = await prisma.user.findFirst({
+            select: {
+                nickName: true,
+            },
+            where: {
+                username: request.username,
+            }
+        })
+        return ReturnHelper.dataResponse(user!)
+    } catch (e: unknown) {
+        console.log(e)
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
+    }
+}
+
+export async function branch(request: any, error: any) {
+    try {
+        const masterBranch = await prisma.masterBranch.findMany({
+            select: {
+                latitude: true,
+                longitude: true,
+                radius: true,
+                attendanceId: true,
+                qrAttendanceIn: true,
+                qrAttendanceOut: true,
+            },
+            where: {
+                userBranchList: {
+                    every: {
+                        username: request.username
+                    }
+                },
+            }
+        })
+        return ReturnHelper.dataResponse(masterBranch!)
+    } catch (e: unknown) {
+        console.log(e)
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
+    }
+}
+
+export async function changePassword(request: any, options: any, error: any) {
     try {
         const user = await prisma.user.findFirst({
             select: {
@@ -38,15 +81,15 @@ export async function changePassword(request: any, options: any) {
                 "common.information.failed"
             )
         } else {
-            return ReturnHelper.failedResponse("common.information.oldPasswordWrong")
+            return error(500, ReturnHelper.messageResponse("common.information.oldPasswordWrong"))
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function json() {
+export async function json(error: any) {
     try {
         const masterJsonList = await prisma.masterJson.findMany({
             select: {
@@ -80,11 +123,11 @@ export async function json() {
         return ReturnHelper.dataResponse(masterJsonList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function menu(request: any) {
+export async function menu(request: any, error: any) {
     try {
         const roleList = [
             {
@@ -153,6 +196,6 @@ export async function menu(request: any) {
         return ReturnHelper.dataResponse(masterMenuList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

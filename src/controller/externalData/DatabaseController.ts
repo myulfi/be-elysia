@@ -6,21 +6,21 @@ import * as DatabaseFacade from "../../facade/externalData/DatabaseFacade"
 const DatabaseController = new Elysia({})
     .get(
         "/database.json",
-        ({ query }) => DatabaseFacade.get(query),
+        ({ query, error }) => DatabaseFacade.get(query, error),
         { query: CommonModel.TableModel }
     )
     .get(
         "/:id/database.json",
-        ({ params: { id } }) => DatabaseFacade.getById(id),
+        ({ params: { id }, error }) => DatabaseFacade.getById(id, error),
         { params: CommonModel.NumericIdModel }
     )
     .post(
         "/database.json",
-        ({ request, body }) => DatabaseFacade.create(request, body),
+        ({ request, body, error }) => DatabaseFacade.create(request, body, error),
         { body: ExternalModel.DatabaseModel }
     )
     .patch("/:id/database.json",
-        ({ request, params: { id }, body }) => DatabaseFacade.update(request, id, body),
+        ({ request, params: { id }, body, error }) => DatabaseFacade.update(request, id, body, error),
         {
             params: CommonModel.NumericIdModel,
             body: ExternalModel.DatabaseModel
@@ -28,27 +28,27 @@ const DatabaseController = new Elysia({})
     )
     .delete(
         '/:ids/database.json',
-        ({ request, params: { ids } }) => DatabaseFacade.remove(request, ids),
+        ({ request, params: { ids }, error }) => DatabaseFacade.remove(request, ids, error),
         { params: CommonModel.NumericIdArrayModel }
     )
     .patch(
         '/:id/unlock-database.json',
-        ({ request, params: { id } }) => DatabaseFacade.unlock(request, id),
+        ({ request, params: { id }, error }) => DatabaseFacade.unlock(request, id, error),
         { params: CommonModel.IntegerIdModel }
     )
     .patch(
         '/:id/lock-database.json',
-        ({ request, params: { id } }) => DatabaseFacade.lock(request, id),
+        ({ request, params: { id }, error }) => DatabaseFacade.lock(request, id, error),
         { params: CommonModel.IntegerIdModel }
     )
     .get(
         '/:id/test-connetion-database.json',
-        ({ params: { id } }) => DatabaseFacade.testConnection(id),
+        ({ params: { id }, error }) => DatabaseFacade.testConnection(id, error),
         { params: CommonModel.IntegerIdModel }
     )
     .patch(
         '/:id/query-manual-database.json',
-        ({ request, params: { id }, body }) => DatabaseFacade.runQueryManual(request, id, 0, body.query),
+        ({ request, params: { id }, body, error }) => DatabaseFacade.runQueryManual(request, id, 0, body.query, error),
         {
             params: CommonModel.IntegerIdModel,
             body: ExternalModel.DatabaseQueryString
@@ -56,7 +56,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         '/:id/query-manual-database.json',
-        ({ request, params: { id }, query: { start, length } }) => DatabaseFacade.getQueryManual(request, id, start, length),
+        ({ request, params: { id }, query: { start, length }, error }) => DatabaseFacade.getQueryManual(request, id, start, length, error),
         {
             params: CommonModel.IntegerIdModel,
             query: t.Object({
@@ -67,7 +67,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         '/:id/query-object-database.json',
-        ({ params: { id }, query }) => DatabaseFacade.getQueryObject(id, query),
+        ({ params: { id }, query, error }) => DatabaseFacade.getQueryObject(id, query, error),
         {
             params: CommonModel.IntegerIdModel,
             query: CommonModel.TableModel
@@ -75,7 +75,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         '/:id/query-whitelist-database.json',
-        ({ params: { id }, query }) => DatabaseFacade.getQueryWhitelist(id, query),
+        ({ params: { id }, query, error }) => DatabaseFacade.getQueryWhitelist(id, query, error),
         {
             params: CommonModel.IntegerIdModel,
             query: CommonModel.TableModel
@@ -83,12 +83,12 @@ const DatabaseController = new Elysia({})
     )
     .post(
         "/query-whitelist-database.json",
-        ({ request, body }) => DatabaseFacade.createQueryWhitelist(request, body),
+        ({ request, body, error }) => DatabaseFacade.createQueryWhitelist(request, body, error),
         { body: ExternalModel.DatabaseQueryWhitelist }
     )
     .delete(
         '/:ids/:externalDatabaseId/query-whitelist-database.json',
-        ({ request, params: { ids, externalDatabaseId } }) => DatabaseFacade.removeQueryWhitelist(request, ids, externalDatabaseId),
+        ({ request, params: { ids, externalDatabaseId }, error }) => DatabaseFacade.removeQueryWhitelist(request, ids, externalDatabaseId, error),
         {
             params: t.Object({
                 ids: t.String({
@@ -101,7 +101,7 @@ const DatabaseController = new Elysia({})
     )
     .patch(
         '/:id/:objectIdentity/query-exact-data-database.json',
-        ({ request, params: { id, objectIdentity } }) => DatabaseFacade.runQueryExactData(request, id, objectIdentity),
+        ({ request, params: { id, objectIdentity }, error }) => DatabaseFacade.runQueryExactData(request, id, objectIdentity, error),
         {
             params: t.Object({
                 id: t.Numeric(),
@@ -114,7 +114,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         '/:id/:externalDatabaseQueryTypeId/query-exact-data-database.json',
-        ({ request, params: { id, externalDatabaseQueryTypeId }, query: { start, length } }) => DatabaseFacade.getQueryExactData(request, id, externalDatabaseQueryTypeId, start, length),
+        ({ request, params: { id, externalDatabaseQueryTypeId }, query: { start, length }, error }) => DatabaseFacade.getQueryExactData(request, id, externalDatabaseQueryTypeId, start, length, error),
         {
             params: t.Object({
                 id: t.Numeric(),
@@ -131,7 +131,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/insert/:includeColumnNameFlag/:numberOfLinePerAction/database-query-sql.json",
-        ({ params: { id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction } }) => DatabaseFacade.getQueryInsertSql(id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction),
+        ({ params: { id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction }, error }) => DatabaseFacade.getQueryInsertSql(id, externalDatabaseQueryTypeId, content, includeColumnNameFlag, numberOfLinePerAction, error),
         {
             params: t.Object({
                 id: t.Number(),
@@ -144,7 +144,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/update/:multipleLineFlag/:firstAmountConditioned/database-query-sql.json",
-        ({ params: { id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned } }) => DatabaseFacade.getQueryUpdateSql(id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned),
+        ({ params: { id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned }, error }) => DatabaseFacade.getQueryUpdateSql(id, externalDatabaseQueryTypeId, content, multipleLineFlag, firstAmountConditioned, error),
         {
             params: t.Object({
                 id: t.Number(),
@@ -157,7 +157,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/:headerFlag/:delimiter/database-query-csv.json",
-        ({ params: { id, externalDatabaseQueryTypeId, content, headerFlag, delimiter } }) => DatabaseFacade.getQueryCsv(id, externalDatabaseQueryTypeId, content, headerFlag, delimiter),
+        ({ params: { id, externalDatabaseQueryTypeId, content, headerFlag, delimiter }, error }) => DatabaseFacade.getQueryCsv(id, externalDatabaseQueryTypeId, content, headerFlag, delimiter, error),
         {
             params: t.Object({
                 id: t.Number(),
@@ -170,7 +170,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/database-query-json.json",
-        ({ params: { id, externalDatabaseQueryTypeId, content } }) => DatabaseFacade.getQueryJson(id, externalDatabaseQueryTypeId, content),
+        ({ params: { id, externalDatabaseQueryTypeId, content }, error }) => DatabaseFacade.getQueryJson(id, externalDatabaseQueryTypeId, content, error),
         {
             params: t.Object({
                 id: t.Number(),
@@ -181,7 +181,7 @@ const DatabaseController = new Elysia({})
     )
     .get(
         "/:id/:externalDatabaseQueryTypeId/:content/database-query-xml.json",
-        ({ params: { id, externalDatabaseQueryTypeId, content } }) => DatabaseFacade.getQueryXml(id, externalDatabaseQueryTypeId, content),
+        ({ params: { id, externalDatabaseQueryTypeId, content }, error }) => DatabaseFacade.getQueryXml(id, externalDatabaseQueryTypeId, content, error),
         {
             params: t.Object({
                 id: t.Number(),

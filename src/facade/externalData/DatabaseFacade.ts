@@ -11,7 +11,7 @@ import * as DateHelper from "../../function/DateHelper"
 import * as RegexConstants from "../../constants/RegexConstants"
 import * as CommonConstants from "../../constants/CommonConstants"
 
-export async function get(query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -59,11 +59,11 @@ export async function get(query: typeof CommonModel.TableModel.static) {
         return ReturnHelper.pageResponse(count, externalDatabaseList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabase.findUnique({
             select: {
@@ -87,11 +87,11 @@ export async function getById(id: number) {
         return ReturnHelper.dataResponse(externalDatabase!)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function create(request: any, options: typeof ExternalModel.DatabaseModel.static) {
+export async function create(request: any, options: typeof ExternalModel.DatabaseModel.static, error: any) {
     try {
         const currentId = await prisma.externalDatabase.findFirst({ select: { id: true }, orderBy: { id: "desc" } })
 
@@ -117,11 +117,11 @@ export async function create(request: any, options: typeof ExternalModel.Databas
         return ReturnHelper.response(externalDatabase !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function update(request: any, id: number, options: typeof ExternalModel.DatabaseModel.static) {
+export async function update(request: any, id: number, options: typeof ExternalModel.DatabaseModel.static, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabase.update({
             where: {
@@ -144,11 +144,11 @@ export async function update(request: any, id: number, options: typeof ExternalM
         return ReturnHelper.response(externalDatabase !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function remove(request: any, ids: string) {
+export async function remove(request: any, ids: string, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabase.updateMany({
             data: {
@@ -162,11 +162,11 @@ export async function remove(request: any, ids: string) {
         return ReturnHelper.response(externalDatabase.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function unlock(request: any, id: number) {
+export async function unlock(request: any, id: number, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabase.update({
             where: {
@@ -182,11 +182,11 @@ export async function unlock(request: any, id: number) {
         return ReturnHelper.response(externalDatabase !== null, "common.information.unlocked", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function lock(request: any, id: number) {
+export async function lock(request: any, id: number, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabase.update({
             where: {
@@ -202,11 +202,11 @@ export async function lock(request: any, id: number) {
         return ReturnHelper.response(externalDatabase !== null, "common.information.locked", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-async function getPostgresqlConnection(id: number, func: Function, errorfunc?: Function) {
+async function getPostgresqlConnection(id: number, error: any, func: Function, errorfunc?: Function) {
     try {
         const externalDatabase = await prisma.externalDatabase.findUnique({
             select: {
@@ -245,22 +245,22 @@ async function getPostgresqlConnection(id: number, func: Function, errorfunc?: F
                 await postgresClient.connect()
                 response = await func(postgresClient)
             } catch (e) {
-                response = errorfunc !== undefined ? errorfunc(e) : ReturnHelper.failedResponse(String(e))
+                response = errorfunc !== undefined ? errorfunc(e) : error(500, ReturnHelper.messageResponse(String(e)))
             } finally {
                 await postgresClient.end()
             }
         } else {
-            response = ReturnHelper.failedResponse("common.information.databaseNotfounded")
+            response = error(404, ReturnHelper.messageResponse("common.information.databaseNotfounded"))
         }
 
         return response
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-async function getPostgresqlConnection2(id: number, func: Function, errorfunc?: Function) {
+async function getPostgresqlConnection2(id: number, error: any, func: Function, errorfunc?: Function) {
     try {
         const externalDatabase = await prisma.externalDatabase.findUnique({
             select: {
@@ -347,7 +347,7 @@ async function getPostgresqlConnection2(id: number, func: Function, errorfunc?: 
                 } catch (e) {
                     console.log("test4")
                     console.log(e)
-                    response = errorfunc !== undefined ? errorfunc(e) : ReturnHelper.failedResponse("common.information.timeout")
+                    response = errorfunc !== undefined ? errorfunc(e) : error(500, ReturnHelper.messageResponse("common.information.timeout"))
                 } finally {
                     await postgresClient.end()
                     server.close()
@@ -370,18 +370,18 @@ async function getPostgresqlConnection2(id: number, func: Function, errorfunc?: 
 
 
         } else {
-            response = ReturnHelper.failedResponse("common.information.databaseNotfounded")
+            response = error(404, ReturnHelper.messageResponse("common.information.databaseNotfounded"))
         }
 
         return response
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function testConnection(id: number) {
-    return await getPostgresqlConnection(id, () => ReturnHelper.successResponse("common.information.success"))
+export async function testConnection(id: number, error: any) {
+    return await getPostgresqlConnection(id, error, () => ReturnHelper.messageResponse("common.information.success"))
 }
 
 function getQueryResult(query: string) {
@@ -419,7 +419,7 @@ function getQueryResult(query: string) {
     return queryResult
 }
 
-export async function runQueryManual(request: any, id: number, bulkExecuted: number, query: string) {
+export async function runQueryManual(request: any, id: number, bulkExecuted: number, query: string, error: any) {
     try {
         // let selectAllowedFlag = CommonConstants.FLAG.NO
         // let dropAllowedFlag = CommonConstants.FLAG.NO
@@ -526,7 +526,7 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
                     if (CommonConstants.FLAG.NO === selectAllowedFlag) {
                         queryResult.error = "Forbidden to do SELECT action"
                     } else if (queryResultList.length === 0) {
-                        objectResult = await getDataSelection(id, queryResult.query, 0, 0)
+                        objectResult = await getDataSelection(id, queryResult.query, 0, 0, error)
                     }
                 } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP|CREATE|ALTER)" }), "si").test(queryResult.query)) {
                     if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(DROP)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === dropAllowedFlag) {
@@ -536,7 +536,7 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
                     } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(ALTER)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === alterAllowedFlag) {
                         queryResult.error = "Forbidden to do ALTER action"
                     } else {
-                        queryResult = await dataDefinition(id, queryResult)
+                        queryResult = await dataDefinition(id, queryResult, error)
                     }
                 } else if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT|UPDATE|DELETE)" }), "si").test(queryResult.query)) {
                     if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT)" }), "si").test(queryResult.query) && CommonConstants.FLAG.NO === insertAllowedFlag) {
@@ -548,7 +548,7 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
                             queryResult.error = "Forbidden to do DELETE action"
                         } else {
                             if (new RegExp(CommonHelper.formatMessage(RegexConstants.QUERY_MANUAL, { value: "(INSERT|(UPDATE|DELETE)\\s.+\\s?WHERE)" }), "si").test(queryResult.query)) {
-                                queryResult = await dataManipulation(id, queryResult)
+                                queryResult = await dataManipulation(id, queryResult, error)
                             } else {
                                 queryResult.error = "You need WHERE clause"
                             }
@@ -596,11 +596,11 @@ export async function runQueryManual(request: any, id: number, bulkExecuted: num
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getQueryManual(request: any, queryManualId: number, start: number, length: number) {
+export async function getQueryManual(request: any, queryManualId: number, start: number, length: number, error: any) {
     try {
         const queryManual = await prisma.queryManual.findUnique({
             select: {
@@ -613,19 +613,20 @@ export async function getQueryManual(request: any, queryManualId: number, start:
         })
 
         if (queryManual !== null) {
-            return await getDataSelection(queryManual.externalDatabaseId, queryManual.query, start, length)
+            return await getDataSelection(queryManual.externalDatabaseId, queryManual.query, start, length, error)
         }
 
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getQueryObject(id: number, query: typeof CommonModel.TableModel.static) {
+export async function getQueryObject(id: number, query: typeof CommonModel.TableModel.static, error: any) {
     const data = await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const order = `${query.orderColumn} ${query.orderDir}`
             const condition = query.search.length > 0 ? `AND object_name LIKE \'%${unescape(query.search)}%\'` : ""
@@ -729,7 +730,7 @@ export async function getQueryObject(id: number, query: typeof CommonModel.Table
         */
 }
 
-export async function getQueryWhitelist(id: number, query: typeof CommonModel.TableModel.static) {
+export async function getQueryWhitelist(id: number, query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -776,11 +777,11 @@ export async function getQueryWhitelist(id: number, query: typeof CommonModel.Ta
         return ReturnHelper.pageResponse(count, externalDatabaseQueryList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function createQueryWhitelist(request: any, options: typeof ExternalModel.DatabaseQueryWhitelist.static) {
+export async function createQueryWhitelist(request: any, options: typeof ExternalModel.DatabaseQueryWhitelist.static, error: any) {
     try {
         const queryManual = await prisma.queryManual.findUnique({
             select: {
@@ -810,15 +811,15 @@ export async function createQueryWhitelist(request: any, options: typeof Externa
 
             return ReturnHelper.response(externalDatabaseQuery !== null, "common.information.created", "common.information.failed")
         } else {
-            return ReturnHelper.failedResponse("common.information.failed")
+            return error(500, ReturnHelper.messageResponse("common.information.failed"))
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function removeQueryWhitelist(request: any, ids: string, externalDatabaseId: number) {
+export async function removeQueryWhitelist(request: any, ids: string, externalDatabaseId: number, error: any) {
     try {
         const externalDatabase = await prisma.externalDatabaseQuery.updateMany({
             data: {
@@ -835,11 +836,11 @@ export async function removeQueryWhitelist(request: any, ids: string, externalDa
         return ReturnHelper.response(externalDatabase.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function runQueryExactData(request: any, id: number, objectIdentity: string) {
+export async function runQueryExactData(request: any, id: number, objectIdentity: string, error: any) {
     try {
         let queryString = null
         if (objectIdentity.match("^[0-9]{16}$")) {
@@ -861,18 +862,18 @@ export async function runQueryExactData(request: any, id: number, objectIdentity
         }
 
         if (queryString !== null) {
-            const objectResult = await getDataSelection(id, queryString, 0, 0)
+            const objectResult = await getDataSelection(id, queryString, 0, 0, error)
             return ReturnHelper.dataResponse(objectResult?.data!)
         } else {
-            return ReturnHelper.failedResponse("common.information.failed")
+            return error(500, ReturnHelper.messageResponse("common.information.failed"))
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getQueryExactData(request: any, id: number, objectIdentity: string, start: number, length: number) {
+export async function getQueryExactData(request: any, id: number, objectIdentity: string, start: number, length: number, error: any) {
     try {
         let queryString = null
         if (objectIdentity.match("^[0-9]{16}$")) {
@@ -894,19 +895,20 @@ export async function getQueryExactData(request: any, id: number, objectIdentity
         }
 
         if (queryString !== null) {
-            return await getDataSelection(id, queryString, start, length)
+            return await getDataSelection(id, queryString, start, length, error)
         } else {
-            return ReturnHelper.failedResponse("common.information.failed")
+            return error(500, ReturnHelper.messageResponse("common.information.failed"))
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-async function getDataSelection(id: number, query: string, page: number, limit: number) {
+async function getDataSelection(id: number, query: string, page: number, limit: number, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             if (limit === 0) {
                 const result = await postgresClient.query(`${query} LIMIT 0`)
@@ -961,9 +963,10 @@ async function getDataSelection(id: number, query: string, page: number, limit: 
     )
 }
 
-async function dataDefinition(id: number, queryResult: CommonInterface.QueryResult) {
+async function dataDefinition(id: number, queryResult: CommonInterface.QueryResult, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             queryResult.action = "defined"
 
@@ -988,9 +991,10 @@ async function dataDefinition(id: number, queryResult: CommonInterface.QueryResu
     )
 }
 
-async function dataManipulation(id: number, queryResult: CommonInterface.QueryResult) {
+async function dataManipulation(id: number, queryResult: CommonInterface.QueryResult, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             queryResult.action = "modified"
 
@@ -1020,9 +1024,10 @@ function getTableName(query: string) {
     return nameArray.length > 0 && nameArray[0].length > 0 && nameArray[0][0].toLowerCase().startsWith("from ") ? nameArray[0][0].substr(5).trim() : "manual";
 }
 
-export async function getQueryInsertSql(id: number, externalDatabaseQueryTypeId: number, content: string, includeColumnNameFlag: number, numberOfLinePerAction: number) {
+export async function getQueryInsertSql(id: number, externalDatabaseQueryTypeId: number, content: string, includeColumnNameFlag: number, numberOfLinePerAction: number, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const queryManual = await prisma.queryManual.findUnique({
                 select: {
@@ -1091,18 +1096,19 @@ export async function getQueryInsertSql(id: number, externalDatabaseQueryTypeId:
 
                 return {
                     data: content.join("\r\n").trim(),
-                    status: "success"
+                    status: CommonConstants.HTTP_STATUS.OK
                 }
             } else {
-                return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                return error(404, ReturnHelper.messageResponse("common.information.queryNotfounded"))
             }
         }
     )
 }
 
-export async function getQueryUpdateSql(id: number, externalDatabaseQueryTypeId: number, content: string, multipleLineFlag: number, firstAmountConditioned: number) {
+export async function getQueryUpdateSql(id: number, externalDatabaseQueryTypeId: number, content: string, multipleLineFlag: number, firstAmountConditioned: number, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const queryManual = await prisma.queryManual.findUnique({
                 select: {
@@ -1160,18 +1166,19 @@ export async function getQueryUpdateSql(id: number, externalDatabaseQueryTypeId:
 
                 return {
                     data: content.join("\r\n").trim(),
-                    status: "success"
+                    status: CommonConstants.HTTP_STATUS.OK
                 }
             } else {
-                return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                return error(404, ReturnHelper.messageResponse("common.information.queryNotfounded"))
             }
         }
     )
 }
 
-export async function getQueryCsv(id: number, externalDatabaseQueryTypeId: number, content: string, headerFlag: number, delimiter: string) {
+export async function getQueryCsv(id: number, externalDatabaseQueryTypeId: number, content: string, headerFlag: number, delimiter: string, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const queryManual = await prisma.queryManual.findUnique({
                 select: {
@@ -1218,18 +1225,19 @@ export async function getQueryCsv(id: number, externalDatabaseQueryTypeId: numbe
 
                 return {
                     data: content.join("\r\n").trim(),
-                    status: "success"
+                    status: CommonConstants.HTTP_STATUS.OK
                 }
             } else {
-                return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                return error(404, ReturnHelper.messageResponse("common.information.queryNotfounded"))
             }
         }
     )
 }
 
-export async function getQueryJson(id: number, externalDatabaseQueryTypeId: number, content: string) {
+export async function getQueryJson(id: number, externalDatabaseQueryTypeId: number, content: string, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const queryManual = await prisma.queryManual.findUnique({
                 select: {
@@ -1243,18 +1251,19 @@ export async function getQueryJson(id: number, externalDatabaseQueryTypeId: numb
 
                 return {
                     data: JSON.stringify(result.rows).toString(),
-                    status: "success"
+                    status: CommonConstants.HTTP_STATUS.OK
                 }
             } else {
-                return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                return error(404, ReturnHelper.messageResponse("common.information.queryNotfounded"))
             }
         }
     )
 }
 
-export async function getQueryXml(id: number, externalDatabaseQueryTypeId: number, content: string) {
+export async function getQueryXml(id: number, externalDatabaseQueryTypeId: number, content: string, error: any) {
     return await getPostgresqlConnection(
         id,
+        error,
         async (postgresClient: Client) => {
             const queryManual = await prisma.queryManual.findUnique({
                 select: {
@@ -1299,10 +1308,10 @@ export async function getQueryXml(id: number, externalDatabaseQueryTypeId: numbe
 
                 return {
                     data: content.join("").trim(),
-                    status: "success"
+                    status: CommonConstants.HTTP_STATUS.OK
                 }
             } else {
-                return ReturnHelper.failedResponse("common.information.queryNotfounded")
+                return error(404, ReturnHelper.messageResponse("common.information.queryNotfounded"))
             }
         }
     )

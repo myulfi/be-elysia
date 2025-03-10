@@ -5,7 +5,7 @@ import * as ReturnHelper from "../../function/ReturnHelper"
 import * as DateHelper from "../../function/DateHelper"
 import * as MasterConstants from "../../constants/MasterConstants"
 
-export async function get(query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -56,11 +56,11 @@ export async function get(query: typeof CommonModel.TableModel.static) {
         return ReturnHelper.pageResponse(count, masterBranchList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, error: any) {
     try {
         const masterBranch = await prisma.masterBranch.findUnique({
             select: {
@@ -89,11 +89,11 @@ export async function getById(id: number) {
         return ReturnHelper.dataResponse(masterBranch!)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function create(request: any, options: typeof MasterModel.MasterBranchModel.static) {
+export async function create(request: any, options: typeof MasterModel.MasterBranchModel.static, error: any) {
     try {
         const currentId = await prisma.masterBranch.findFirst({ select: { id: true }, orderBy: { id: "desc" } })
 
@@ -118,11 +118,11 @@ export async function create(request: any, options: typeof MasterModel.MasterBra
         return ReturnHelper.response(masterBranch !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function update(request: any, id: number, options: typeof MasterModel.MasterBranchModel.static) {
+export async function update(request: any, id: number, options: typeof MasterModel.MasterBranchModel.static, error: any) {
     try {
         const masterBranch = await prisma.masterBranch.update({
             where: {
@@ -144,11 +144,11 @@ export async function update(request: any, id: number, options: typeof MasterMod
         return ReturnHelper.response(masterBranch !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function remove(request: any, ids: string) {
+export async function remove(request: any, ids: string, error: any) {
     try {
         const masterBranch = await prisma.masterBranch.updateMany({
             data: {
@@ -162,6 +162,6 @@ export async function remove(request: any, ids: string) {
         return ReturnHelper.response(masterBranch.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

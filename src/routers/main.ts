@@ -3,15 +3,18 @@ import * as MainFacade from "../facade/MainFacade"
 
 const Main = new Elysia({})
     .group("/main", app => app
-        .post("/remove-token.json", ({ request }) => MainFacade.logout(request))
+        .get("/profile.json", ({ request, error }) => MainFacade.profile(request, error))
+        .get("/branch.json", ({ request, error }) => MainFacade.branch(request, error))
+        .post("/remove-token.json", ({ request, error }) => MainFacade.logout(request, error))
         .patch(
             "/change-password.json",
-            ({ request, body }) => MainFacade.changePassword(
+            ({ request, body, error }) => MainFacade.changePassword(
                 request,
                 body as {
                     oldPassword: string;
                     newPassword: string;
-                }
+                },
+                error
             ),
             {
                 body: t.Object({
@@ -20,8 +23,8 @@ const Main = new Elysia({})
                 })
             }
         )
-        .get("/role.json", () => MainFacade.json())
-        .get("/menu.json", ({ request }) => MainFacade.menu(request))
+        .get("/role.json", (error) => MainFacade.json(error))
+        .get("/menu.json", ({ request, error }) => MainFacade.menu(request, error))
     )
 
 export default Main

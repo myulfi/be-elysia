@@ -6,21 +6,21 @@ import * as BranchFacade from "../../facade/master/BranchFacade"
 const BranchController = new Elysia({})
     .get(
         "/branch.json",
-        ({ query }) => BranchFacade.get(query),
+        ({ query, error }) => BranchFacade.get(query, error),
         { query: CommonModel.TableModel }
     )
     .get(
         "/:id/branch.json",
-        ({ params: { id } }) => BranchFacade.getById(id),
+        ({ params: { id }, error }) => BranchFacade.getById(id, error),
         { params: CommonModel.NumericIdModel }
     )
     .post(
         "/branch.json",
-        ({ request, body }) => BranchFacade.create(request, body),
+        ({ request, body, error }) => BranchFacade.create(request, body, error),
         { body: MasterModel.MasterBranchModel }
     )
     .patch("/:id/branch.json",
-        ({ request, params: { id }, body }) => BranchFacade.update(request, id, body),
+        ({ request, params: { id }, body, error }) => BranchFacade.update(request, id, body, error),
         {
             params: CommonModel.NumericIdModel,
             body: MasterModel.MasterBranchModel
@@ -28,7 +28,7 @@ const BranchController = new Elysia({})
     )
     .delete(
         '/:ids/branch.json',
-        ({ request, params: { ids } }) => BranchFacade.remove(request, ids),
+        ({ request, params: { ids }, error }) => BranchFacade.remove(request, ids, error),
         { params: CommonModel.IntegerIdArrayModel }
     )
 

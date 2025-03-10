@@ -5,7 +5,7 @@ import * as ReturnHelper from "../../function/ReturnHelper"
 import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
 
-export async function get(query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -45,11 +45,11 @@ export async function get(query: typeof CommonModel.TableModel.static) {
         return ReturnHelper.pageResponse(count, exampleTemplateList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, error: any) {
     try {
         const exampleTemplate = await prisma.exampleTemplate.findUnique({
             where: { id: id },
@@ -58,11 +58,11 @@ export async function getById(id: number) {
         return ReturnHelper.dataResponse(exampleTemplate!)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function create(request: any, options: typeof TestModel.ExampleTemplateModel.static) {
+export async function create(request: any, options: typeof TestModel.ExampleTemplateModel.static, error: any) {
     try {
         const exampleTemplate = await prisma.exampleTemplate.create({
             data: {
@@ -84,11 +84,11 @@ export async function create(request: any, options: typeof TestModel.ExampleTemp
         return ReturnHelper.response(exampleTemplate !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function update(request: any, id: number, options: typeof TestModel.ExampleTemplateModel.static) {
+export async function update(request: any, id: number, options: typeof TestModel.ExampleTemplateModel.static, error: any) {
     try {
         const exampleTemplate = await prisma.exampleTemplate.update({
             where: {
@@ -111,11 +111,11 @@ export async function update(request: any, id: number, options: typeof TestModel
         return ReturnHelper.response(exampleTemplate !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function remove(request: any, ids: string) {
+export async function remove(request: any, ids: string, error: any) {
     try {
         const exampleTemplate = await prisma.exampleTemplate.updateMany({
             data: {
@@ -129,6 +129,6 @@ export async function remove(request: any, ids: string) {
         return ReturnHelper.response(exampleTemplate.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

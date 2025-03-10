@@ -9,7 +9,7 @@ import * as ReturnHelper from "../../function/ReturnHelper"
 import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
 
-export async function get(query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -64,11 +64,11 @@ export async function get(query: typeof CommonModel.TableModel.static) {
         return ReturnHelper.pageResponse(count, externalServerList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, error: any) {
     try {
         const externalServer = await prisma.externalServer.findUnique({
             select: {
@@ -88,11 +88,11 @@ export async function getById(id: number) {
         return ReturnHelper.dataResponse(externalServer!)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function create(request: any, options: typeof ExternalModel.ServerModel.static) {
+export async function create(request: any, options: typeof ExternalModel.ServerModel.static, error: any) {
     try {
         const currentId = await prisma.externalServer.findFirst({ select: { id: true }, orderBy: { id: "desc" } })
         const externalServer = await prisma.externalServer.create({
@@ -117,11 +117,11 @@ export async function create(request: any, options: typeof ExternalModel.ServerM
         return ReturnHelper.response(externalServer !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function update(request: any, id: number, options: typeof ExternalModel.ServerModel.static) {
+export async function update(request: any, id: number, options: typeof ExternalModel.ServerModel.static, error: any) {
     try {
         const externalServer = await prisma.externalServer.update({
             where: {
@@ -145,11 +145,11 @@ export async function update(request: any, id: number, options: typeof ExternalM
         return ReturnHelper.response(externalServer !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function remove(request: any, ids: string) {
+export async function remove(request: any, ids: string, error: any) {
     try {
         const externalServer = await prisma.externalServer.updateMany({
             data: {
@@ -163,11 +163,11 @@ export async function remove(request: any, ids: string) {
         return ReturnHelper.response(externalServer.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getShortcut(id: number) {
+export async function getShortcut(id: number, error: any) {
     try {
         const externalServerShortcutList = await prisma.externalServerShortcut.findMany({
             select: {
@@ -185,11 +185,11 @@ export async function getShortcut(id: number) {
         return ReturnHelper.dataResponse(externalServerShortcutList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function createShortcut(request: any, id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+export async function createShortcut(request: any, id: number, options: typeof ExternalModel.ServerDirectoryModel.static, error: any) {
     try {
         const externalServerShorcut = await prisma.externalServerShortcut.create({
             data: {
@@ -209,11 +209,11 @@ export async function createShortcut(request: any, id: number, options: typeof E
         return ReturnHelper.dataResponse(externalServerShorcut)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function removeShorcut(request: any, ids: string) {
+export async function removeShorcut(request: any, ids: string, error: any) {
     try {
         const externalServer = await prisma.externalServerShortcut.updateMany({
             data: {
@@ -227,7 +227,7 @@ export async function removeShorcut(request: any, ids: string) {
         return ReturnHelper.response(externalServer.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
@@ -384,7 +384,7 @@ async function uploadFileExternalServer(id: number, remotePath: string, files: F
     }
 }
 
-export async function getDefaultDirectoryById(id: number) {
+export async function getDefaultDirectoryById(id: number, error: any) {
     try {
         if (id === 0) {
             return ReturnHelper.dataResponse({ "defaultDirectory": Bun.env.ROOT_SRC_FOLDER })
@@ -394,7 +394,7 @@ export async function getDefaultDirectoryById(id: number) {
         }
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
@@ -444,7 +444,7 @@ export async function getDirectory(id: number, query: any) {
     })
 }
 
-export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static) {
+export async function createDirectory(id: number, options: typeof ExternalModel.ServerDirectoryModel.static, error: any) {
     try {
         if (id === 0) {
             await fs.promises.mkdir(`${options.directory}/${options.name}`)
@@ -454,11 +454,11 @@ export async function createDirectory(id: number, options: typeof ExternalModel.
         return ReturnHelper.response(true, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function renameDirectoryFile(id: number, options: typeof ExternalModel.ServerDirectoryFileModel.static) {
+export async function renameDirectoryFile(id: number, options: typeof ExternalModel.ServerDirectoryFileModel.static, error: any) {
     try {
         if (id === 0) {
             await fs.promises.rename(`${options.directory}/${options.oldName!}`, `${options.directory}/${options.name}`)
@@ -468,11 +468,11 @@ export async function renameDirectoryFile(id: number, options: typeof ExternalMo
         return ReturnHelper.response(true, "common.information.renamed", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function pasteDirectoryFile(id: number, options: typeof ExternalModel.ServerPasteDirectoryFileModel.static) {
+export async function pasteDirectoryFile(id: number, options: typeof ExternalModel.ServerPasteDirectoryFileModel.static, error: any) {
     try {
         let newName: string = ""
         for await (const name of options.name) {
@@ -501,11 +501,11 @@ export async function pasteDirectoryFile(id: number, options: typeof ExternalMod
         return ReturnHelper.response(true, "common.information.pasted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function removeDirectoryFile(id: number, options: typeof ExternalModel.ServerRemoveDirectoryFileModel.static) {
+export async function removeDirectoryFile(id: number, options: typeof ExternalModel.ServerRemoveDirectoryFileModel.static, error: any) {
     try {
         if (id === 0) {
             options.name.forEach(name => {
@@ -519,11 +519,11 @@ export async function removeDirectoryFile(id: number, options: typeof ExternalMo
         return ReturnHelper.response(true, "common.information.removed", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+export async function getFile(id: number, options: typeof ExternalModel.ServerFileModel.static, error: any) {
     try {
         let data
         if (id === 0) {
@@ -535,11 +535,11 @@ export async function getFile(id: number, options: typeof ExternalModel.ServerFi
         return ReturnHelper.dataResponse({ content: data })
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function createFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+export async function createFile(id: number, options: typeof ExternalModel.ServerFileModel.static, error: any) {
     try {
         if (id === 0) {
             const fileHandle = await fs.promises.open(`${options.directory}/${options.name}`, 'wx')
@@ -551,11 +551,11 @@ export async function createFile(id: number, options: typeof ExternalModel.Serve
         return ReturnHelper.response(true, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function updateFile(id: number, options: typeof ExternalModel.ServerFileModel.static) {
+export async function updateFile(id: number, options: typeof ExternalModel.ServerFileModel.static, error: any) {
     try {
         if (id === 0) {
             await fs.promises.writeFile(`${options.directory}/${options.name}`, options.content)
@@ -565,11 +565,11 @@ export async function updateFile(id: number, options: typeof ExternalModel.Serve
         return ReturnHelper.response(true, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function uploadFile(id: number, options: typeof ExternalModel.ServerUploadFileModel.static) {
+export async function uploadFile(id: number, options: typeof ExternalModel.ServerUploadFileModel.static, error: any) {
     try {
         if (id === 0) {
             options.files.forEach(file => {
@@ -581,6 +581,6 @@ export async function uploadFile(id: number, options: typeof ExternalModel.Serve
         return ReturnHelper.response(true, "common.information.uploaded", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

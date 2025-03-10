@@ -6,7 +6,7 @@ import * as CommonHelper from "../../function/CommonHelper"
 import * as DateHelper from "../../function/DateHelper"
 import * as FileHelper from "../../function/FileHelper"
 
-export async function get(query: typeof CommonModel.TableModel.static) {
+export async function get(query: typeof CommonModel.TableModel.static, error: any) {
     try {
         let condition = {}
 
@@ -53,11 +53,11 @@ export async function get(query: typeof CommonModel.TableModel.static) {
         return ReturnHelper.pageResponse(count, languageList)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function getById(id: number) {
+export async function getById(id: number, error: any) {
     try {
         const language = await prisma.masterLanguageKey.findUnique({
             select: {
@@ -79,11 +79,11 @@ export async function getById(id: number) {
         return ReturnHelper.dataResponse(language!)
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function create(request: any, options: typeof CommandModel.LanguageModel.static) {
+export async function create(request: any, options: typeof CommandModel.LanguageModel.static, error: any) {
     try {
         const language = await prisma.masterLanguageKey.create({
             data: {
@@ -121,11 +121,11 @@ export async function create(request: any, options: typeof CommandModel.Language
         return ReturnHelper.response(language !== null, "common.information.created", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function update(request: any, id: number, options: typeof CommandModel.LanguageModel.static) {
+export async function update(request: any, id: number, options: typeof CommandModel.LanguageModel.static, error: any) {
     try {
         const language = await prisma.masterLanguageKey.update({
             where: {
@@ -181,11 +181,11 @@ export async function update(request: any, id: number, options: typeof CommandMo
         return ReturnHelper.response(language !== null, "common.information.updated", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function implement() {
+export async function implement(error: any) {
     try {
         const masterLanguageList = await prisma.masterLanguage.findMany({
             select: {
@@ -231,14 +231,14 @@ export async function implement() {
             FileHelper.append(`${Bun.env.ROOT_SRC_FOLDER}/language`, `${masterLanguage.code}.json`, "}")
         })
 
-        return ReturnHelper.successResponse("common.information.implemented")
+        return ReturnHelper.messageResponse("common.information.implemented")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }
 
-export async function remove(request: any, ids: string) {
+export async function remove(request: any, ids: string, error: any) {
     try {
         console.log(ids)
         const language = await prisma.masterLanguageKey.updateMany({
@@ -253,6 +253,6 @@ export async function remove(request: any, ids: string) {
         return ReturnHelper.response(language.count > 0, "common.information.deleted", "common.information.failed")
     } catch (e: unknown) {
         console.log(e)
-        return ReturnHelper.failedResponse("common.information.failed")
+        return error(500, ReturnHelper.messageResponse("common.information.failed"))
     }
 }

@@ -6,21 +6,21 @@ import * as ExampleTemplateFacade from "../../facade/test/ExampleTemplateFacade"
 const ExampleTemplateController = new Elysia({})
     .get(
         "/example-template.json",
-        ({ query }) => ExampleTemplateFacade.get(query),
+        ({ query, error }) => ExampleTemplateFacade.get(query, error),
         { query: CommonModel.TableModel }
     )
     .get(
         "/:id/example-template.json",
-        ({ params: { id } }) => ExampleTemplateFacade.getById(id),
+        ({ params: { id }, error }) => ExampleTemplateFacade.getById(id, error),
         { params: CommonModel.NumericIdModel }
     )
     .post(
         "/example-template.json",
-        ({ request, body }) => ExampleTemplateFacade.create(request, body),
+        ({ request, body, error }) => ExampleTemplateFacade.create(request, body, error),
         { body: TestModel.ExampleTemplateModel }
     )
     .patch("/:id/example-template.json",
-        ({ request, params: { id }, body }) => ExampleTemplateFacade.update(request, id, body),
+        ({ request, params: { id }, body, error }) => ExampleTemplateFacade.update(request, id, body, error),
         {
             params: CommonModel.NumericIdModel,
             body: TestModel.ExampleTemplateModel
@@ -28,7 +28,7 @@ const ExampleTemplateController = new Elysia({})
     )
     .delete(
         '/:ids/example-template.json',
-        ({ request, params: { ids } }) => ExampleTemplateFacade.remove(request, ids),
+        ({ request, params: { ids }, error }) => ExampleTemplateFacade.remove(request, ids, error),
         { params: CommonModel.NumericIdArrayModel }
     )
 
