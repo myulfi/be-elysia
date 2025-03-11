@@ -15,3 +15,6 @@ CREATE TABLE tbl_mt_branch(
 	, dt_updated TIMESTAMP
 	, version SMALLINT DEFAULT(0)
 );
+
+INSERT INTO tbl_mt_branch VALUES(1, 'HO', 'Jalan Pulau Intan', -6.428132855073892, 106.71272040609797, 100, 1, 'ABCDEF', 'ABCDEF', 0, 'system', CURRENT_DATE, 'system', CURRENT_DATE, 0);
+INSERT INTO tbl_mt_branch VALUES(2, 'Kemang', 'Jalan Kemang', -6.27232642118957, 106.82046213382861, 100, 1, 'ABCDEF', 'ABCDEF', 0, 'system', CURRENT_DATE, 'system', CURRENT_DATE, 0);

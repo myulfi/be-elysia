@@ -1,9 +1,10 @@
 import cors from "@elysiajs/cors"
-import jwt from "@elysiajs/jwt"
+// import jwt from "@elysiajs/jwt"
+import jwt from 'jsonwebtoken'
 import { Elysia } from "elysia"
 import * as ReturnHelper from "./function/ReturnHelper"
 import * as FileHelper from "./function/FileHelper"
-import { generateToken } from "./controller/JsonWebTokenController"
+import { generateToken, refreshToken } from "./controller/JsonWebTokenController"
 import prisma from "../prisma/client"
 import Main from "./routers/main"
 import Master from "./routers/master"
@@ -14,21 +15,36 @@ import Test from "./routers/test"
 const app = new Elysia()
     .get("/", () => "Hello Elysia")
     .use(cors())
-    .use(
-        jwt({
-            name: "jwt",
-            secret: Bun.env.JWT_SECRET!
-        })
-    )
+    // .use(
+    //     jwt({
+    //         name: "jwt",
+    //         secret: Bun.env.JWT_ACCESS_TOKEN_SECRET!,
+    //         // exp: "10s"
+    //     })
+    // )
+    // .post(
+    //     "/generate-token.json",
+    //     ({ jwt, body }) => generateToken(
+    //         jwt,
+    //         body as {
+    //             username: string;
+    //             password: string;
+    //         }
+    //     )
+    // )
     .post(
         "/generate-token.json",
-        ({ jwt, body }) => generateToken(
-            jwt,
+        ({ body, error }) => generateToken(
             body as {
                 username: string;
                 password: string;
-            }
+            },
+            error
         )
+    )
+    .post(
+        "/refresh-token.json",
+        ({ request, error }) => refreshToken(request, error)
     )
     .get(
         "/:lng/language.json",
@@ -42,11 +58,11 @@ const app = new Elysia()
     )
     .guard(
         {
-            async beforeHandle({ jwt, request, path, params, error }: any) {
+            async beforeHandle({ request, path, params, error }: any) {
                 try {
-                    const result = await jwt.verify(request.headers.get("authorization").substr("Bearer".length).trim())
+                    const result = await jwt.verify(request.headers.get("authorization").substr("Bearer".length).trim(), Bun.env.JWT_ACCESS_TOKEN_SECRET!)
                     if (result == false) {
-                        return error(401, ReturnHelper.failedResponse("common.information.invalidToken"))
+                        return error(401, ReturnHelper.messageResponse("common.information.invalidToken"))
                     } else {
                         let pattern = path
                         if (params !== undefined) {
@@ -76,7 +92,7 @@ const app = new Elysia()
                             const masterJsonArray = masterJson.jsonRoleList.map((masterJson: any) => masterJson.roleId)
                             const userRoleArrayArray = result.userBranchList.map((userBranch: any) => userBranch.roleId)
                             if (masterJsonArray.filter(item => userRoleArrayArray.includes(item)).length === 0) {
-                                return error(403, ReturnHelper.failedResponse("common.information.forbidden"))
+                                return error(403, ReturnHelper.messageResponse("common.information.forbidden"))
                             }
                         }
 
@@ -84,7 +100,7 @@ const app = new Elysia()
                         request.userRoleList = result.userRoleList
                     }
                 } catch (e: unknown) {
-                    return error(401, ReturnHelper.failedResponse("common.information.needCredential"))
+                    return error(401, ReturnHelper.messageResponse("common.information.needCredential"))
                 }
             }
         },
